@@ -85,14 +85,14 @@ void VisualObject::move(float dt)
 
 void VisualObject::MoveForward(float amount){
     //Z is forward in the world
-    QVector3D fwd{0,0,amount};
-    qDebug() << mPosition;
+    qDebug() << "Moved forward: " << (amount * GetForward());
     mPosition.translate(amount * GetForward());
+    UpdateTransform();
 }
 void VisualObject::MoveRight(float amount){
     //X is right in the world
-    QVector3D right{amount,0,0};
-    mPosition.translate(right * GetRight());
+    qDebug() << "Moved right: " << (amount * GetRight());
+    mPosition.translate(amount * GetRight());
 }
 void VisualObject::rotate(float dx, float dy, float dz)
 {
@@ -100,6 +100,7 @@ void VisualObject::rotate(float dx, float dy, float dz)
 }
 
 void VisualObject::RotateRight(float amount){
+    qDebug() << "Rotated right: ";
     mRotation.rotate(amount, QVector3D{0, 1, 0});
 }
 std::pair<float, float> VisualObject::getPosition2D()
@@ -165,11 +166,20 @@ void VisualObject::SetRotation(const QVector3D& rotation)
 }
 
 QVector3D VisualObject::GetForward(){
-    QVector3D fwd = mMatrix.column(3).toVector3DAffine();
-
+    qDebug() << "MMatrix: " << mMatrix;
+    QVector3D fwd = mMatrix.inverted().column(0).toVector3D();
+    //fwd.setX(mMatrix.inverted().column(1).x());
+    //fwd.setY(mMatrix.inverted().column(1).y());
+    //fwd.setZ(mMatrix.inverted().column(1).z());
+    fwd.setX(-fwd.x());
+    qDebug() << "Got Forward: " << fwd;
     return fwd;
 }
 QVector3D VisualObject::GetRight(){
-    QVector3D rgt = mMatrix.column(2).toVector3DAffine();
+    QVector3D rgt;// = mMatrix.column(1).toVector3D();
+    rgt.setX(mMatrix.inverted().column(2).x());
+    rgt.setY(mMatrix.inverted().column(2).y());
+    rgt.setZ(mMatrix.inverted().column(2).z());
+    qDebug() << "Got Right: " << rgt;
     return rgt;
 }

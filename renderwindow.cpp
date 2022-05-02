@@ -120,29 +120,33 @@ void RenderWindow::init()
     mTextures.insert(std::pair<std::string, Texture*>{"Hund", new Texture("../EksamenAdam3DProg/hund.bmp")});
     mTextures.insert(std::pair<std::string, Texture*>{"Hammer", new Texture("../EksamenAdam3DProg/hammer.bmp")});
     mTextures.insert(std::pair<std::string, Texture*>{"Grass", new Texture("../EksamenAdam3DProg/GrassTekstur.bmp")});
-    //Oppgave 3
-    mSun = new VisualSun("../EksamenAdam3DProg/Sun.obj", *mShaders["PlainShader"], ObjectState::STATIC);
-    mMap.insert(std::pair<std::string, VisualObject*>{"Sun", mSun});
-
-    //Create camera
-    mPlayCamera = new Camera();
-    mEditorCamera = new Camera();
-    //Oppgave 4
-    //Lager player fra object.obj, gir phongshader og hund tekstur
-    mMap.insert(std::pair<std::string, VisualObject*>{"Player",
-                new ObjMesh("../EksamenAdam3DProg/object.obj", *mShaders["LightShader"], mTextures["Hund"], ObjectState::DYNAMIC)});
-    mMap["Player"]->SetRotation(QVector3D(0, -1, 0));
-    mMap["Player"]->SetPosition(QVector3D(0, 0, 0));
 
     //Oppgave 2
     //Init terrenget med phongshaderen og GrassTekstur
     mTerrain = new Terrain(*mShaders["LightShader"], mTextures["Grass"], ObjectState::STATIC);
-
     mMap.insert(std::pair<std::string, VisualObject*>{"Terrain", mTerrain});
 
+    //Oppgave 3
+    mSun = new VisualSun("../EksamenAdam3DProg/Sun.obj", *mShaders["PlainShader"], ObjectState::STATIC);
+    mMap.insert(std::pair<std::string, VisualObject*>{"Sun", mSun});
+
+    //Oppgave 4
+    //Lager player fra object.obj, gir phongshader og hund tekstur
+    mMap.insert(std::pair<std::string, VisualObject*>{"Player",
+                new ObjMesh("../EksamenAdam3DProg/object.obj", *mShaders["LightShader"], mTextures["Hund"], ObjectState::DYNAMIC)});
+   mMap["Player"]->RotateRight(-90);
+    mMap["Player"]->SetPosition(QVector3D(0, 0, 0));
+
+    //Oppgave 5
+    //lager kameraer
+    mPlayCamera = new Camera();
+    mEditorCamera = new Camera();
+
     //Oppgave 6
+    //Lager aksen som vises i editor modus
     mXYZ = new XYZ(*mShaders["PlainShader"], ObjectState::STATIC);
     mXYZ->init();
+
     //Subdivide quadtree
     mQuadTree.subDivide(2);
     //init every object
@@ -152,7 +156,7 @@ void RenderWindow::init()
         (*it).second->init();
         (*it).second->UpdateTransform();
     }
-
+    mEditorCamera->init();
     glBindVertexArray(0);       //unbinds any VertexArray - good practice
 }
 
@@ -171,7 +175,7 @@ void RenderWindow::render()
     switch(mGameState){
     //
     case GameState::Editor :
-        mEditorCamera->init();
+
         mEditorCamera->perspective(90, static_cast<float>(width()) / static_cast<float>(height()), 0.1, 3000.0);
         //Yaw til kamera med mus input her
 
@@ -235,16 +239,6 @@ void RenderWindow::render()
                                            "cameraPosition");
             }
         break;
-        }
-        //Send view and projection matrices to alle the shaders
-        (*it).second->SetUniformMatrix4fv(*mPlayCamera->mVmatrix, "vMatrix");
-        (*it).second->SetUniformMatrix4fv(*mPlayCamera->mPmatrix, "pMatrix");
-        //glUnifor
-        //The visual object sends its own modelMatrix to the shader so it dosent need to be done here
-        if((*it).first == "LightShader"){
-            //Give all lights the camera position
-            (*it).second->SetUniform3f(mPlayCamera->GetPosition().x(), mPlayCamera->GetPosition().y(), mPlayCamera->GetPosition().y(),
-                                       "cameraPosition");
         }
         //Set light posistion
         (*it).second->SetUniform3f(mMap["Sun"]->GetPosition().x(), mMap["Sun"]->GetPosition().y(), mMap["Sun"]->GetPosition().z(),
@@ -400,11 +394,13 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
     {
         switch(mGameState){
         case GameState::Editor :
-            //Beveg kamera fremover
+            //Beveg kamera fremover            
+            //mEditorCamera->MoveForward(100);
+            mEditorCamera->translate(0,0, 1);
         break;
         case GameState::Play :
             //beveg hunden fremover
-            mMap["Player"]->MoveForward(1);
+            mMap["Player"]->MoveForward(-1);
         break;
         }
     }
@@ -412,11 +408,13 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
     {
         switch(mGameState){
         case GameState::Editor :
-        //beveg kamera bakover
+        //beveg kamera bakover       
+            //mEditorCamera->MoveForward(-100);
+            mEditorCamera->translate(0,0, -1);
         break;
         case GameState::Play :
         //beveg hunden bakover
-            mMap["Player"]->MoveForward(-1);
+            mMap["Player"]->MoveForward(1);
         break;
         }
     }
@@ -425,6 +423,7 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
         switch(mGameState){
         case GameState::Editor :
         //  Roter kamera til venstre
+            mEditorCamera->MoveRight(1);
         break;
         case GameState::Play :
         //Roter hunden til venstre
@@ -437,6 +436,7 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
         switch(mGameState){
         case GameState::Editor :
         //Roter kamera til høyre
+            mEditorCamera->MoveRight(-1);
         break;
         case GameState::Play :
         //Roter hunden til høyre
@@ -449,6 +449,7 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
         switch(mGameState){
         case GameState::Editor :
         //Beveg kamera oppover
+            mEditorCamera->translate(0, 1, 0);
         break;
         case GameState::Play :
         break;
@@ -459,6 +460,7 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
         switch(mGameState){
         case GameState::Editor :
         //beveg kamera bakover
+            mEditorCamera->translate(0, -1, 0);
         break;
         case GameState::Play :
         break;
@@ -482,7 +484,6 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
 //    {
 //        mMainWindow->statusBar()->showMessage(" SSSS");
 //    }
-    qDebug()<< "Player pos: " << mMap["Player"]->GetPosition();
 }
 
 void RenderWindow::SwapGameMode(){

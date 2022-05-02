@@ -18,6 +18,9 @@ public:
     void lookAt(const QVector3D& eye, const QVector3D& at, const QVector3D& up);
     void translate(float dx, float dy, float dz);
     void rotate(float dx, float dy, float dz);
+    void MoveForward(float amount);
+    void MoveRight(float amount);
+    void RotateRight(float amount);
     QVector3D GetPosition();
 };
 

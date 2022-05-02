@@ -38,6 +38,23 @@ void Camera::rotate(float dx, float dy, float dz) {
     mVmatrix->rotate(dx, dy, dz);
 }
 
+void Camera::MoveForward(float amount)
+{
+    QVector3D fwd = mVmatrix->row(3).toVector3D();
+    mVmatrix->translate(amount * fwd);
+}
+
+void Camera::MoveRight(float amount)
+{
+    QVector3D rgt = mVmatrix->column(2).toVector3D();
+    mVmatrix->translate(amount * rgt);
+}
+
+void Camera::RotateRight(float amount)
+{
+    mVmatrix->rotate(amount, QVector3D(0, 1,0));
+}
+
 QVector3D Camera::GetPosition(){
     return mEye;
 }
