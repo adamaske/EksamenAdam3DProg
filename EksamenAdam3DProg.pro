@@ -9,15 +9,12 @@ SOURCES += main.cpp \
     aabbcollision.cpp \
     camera.cpp \
     collisionshape.cpp \
-    cube.cpp \
     cubecollision.cpp \
     enemy.cpp \
-    light.cpp \
     logger.cpp \
     mainwindow.cpp \
     objmesh.cpp \
     oobbcollision.cpp \
-    pointlight.cpp \
     renderwindow.cpp \
     shader.cpp \
     spherecollision.cpp \
@@ -26,22 +23,20 @@ SOURCES += main.cpp \
     trophy.cpp \
     vector3d.cpp \
     vertex.cpp \
-    visualobject.cpp
+    visualobject.cpp \
+    visualsun.cpp
 
 HEADERS += \
     QuadTree.h \
     aabbcollision.h \
     camera.h \
     collisionshape.h \
-    cube.h \
     cubecollision.h \
     enemy.h \
-    light.h \
     logger.h \
     mainwindow.h \
     objmesh.h \
     oobbcollision.h \
-    pointlight.h \
     renderwindow.h \
     shader.h \
     spherecollision.h \
@@ -51,12 +46,15 @@ HEADERS += \
     trophy.h \
     vector3d.h \
     vertex.h \
-    visualobject.h
+    visualobject.h \
+    visualsun.h
 
 FORMS += \
     mainwindow.ui
 
 DISTFILES += \
+    billboardshader.frag \
+    billboardshader.vert \
     heightshader.frag \
     heightshader.vert \
     lightshader.frag \

@@ -48,7 +48,6 @@ protected:
    GLint mTextureUniform{0};
    GLint mMatrixUniform{0};
    QMatrix4x4 mMatrix;
-
    QMatrix4x4 mPosition;
    QMatrix4x4 mRotation;
    QMatrix4x4 mScale;
@@ -62,6 +61,7 @@ public:
    Shader &mShader;
    Texture* mTexture;
 
+   QVector3D mObjectColor{1.0f, 1.0f,0.0f}; //Yellow?
    //Velocity
    QVector3D GetVelocity(){return mVelocity;};
    void SetVelocity(QVector3D newVelocity){ mVelocity = newVelocity;};

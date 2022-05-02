@@ -12,16 +12,15 @@
 #include "shader.h"
 #include "mainwindow.h"
 #include "logger.h"
+
 #include "visualobject.h"
 #include "camera.h"
-#include "cube.h"
 #include "objmesh.h"
 #include "texture.h"
-#include "light.h"
-#include "pointlight.h"
 #include "terrain.h"
 #include "trophy.h"
 #include "enemy.h"
+#include "visualsun.h"
 RenderWindow::RenderWindow(const QSurfaceFormat &format, MainWindow *mainWindow)
     : mContext(nullptr), mInitialized(false), mMainWindow(mainWindow), mQuadTree(Point2D(50,50), Point2D(-50,50), Point2D(50,-50), Point2D(-50,-50))
 
@@ -113,30 +112,29 @@ void RenderWindow::init()
                                                                                 "../EksamenAdam3DProg/lightshader.frag")});
     mShaders.insert(std::pair<std::string, Shader*>{"HeightShader", new Shader("../EksamenAdam3DProg/heightshader.vert",
                                                                                 "../EksamenAdam3DProg/heightshader.frag")});
-    //Set the material properties of the lightshader
-    mShaders["LightShader"]->use();
-    mShaders["LightShader"]->SetUniform1i(0, "material.diffuse");
-    mShaders["LightShader"]->SetUniform1i(1, "material.specular");
-    mShaders["LightShader"]->SetUniform1f(32.0f, "material.shininess");
-    //Set directionallight properties of the lightshader
-    mShaders["LightShader"]->SetUniform3f(0.2f, 1.0f, 0.3f, "dirLight.direction");
-    mShaders["LightShader"]->SetUniform3f(0.1f, 0.1f, 0.1f, "dirLight.ambient" );
-    mShaders["LightShader"]->SetUniform3f(0.04f, 0.04f, 0.04f, "dirLight.diffuse" );
-    mShaders["LightShader"]->SetUniform3f( 0.5f, 0.5f, 0.5f, "dirLight.specular");
+    mShaders.insert(std::pair<std::string, Shader*>{"BillboardShader", new Shader("../EksamenAdam3DProg/billboardshader.vert",
+                                                                                "../EksamenAdam3DProg/billboardshader.frag")});
+    //Create textures
+    mTextures.insert(std::pair<std::string, Texture*>{"Plain", new Texture()});
+    mTextures.insert(std::pair<std::string, Texture*>{"Hund", new Texture("../EksamenAdam3DProg/hund.bmp")});
+    mTextures.insert(std::pair<std::string, Texture*>{"Hammer", new Texture("../EksamenAdam3DProg/hammer.bmp")});
+    mTextures.insert(std::pair<std::string, Texture*>{"Grass", new Texture("../EksamenAdam3DProg/GrassTekstur.bmp")});
+    //Oppgave 3
+    mSun = new VisualSun("../EksamenAdam3DProg/Sun.obj", *mShaders["PlainShader"]);
+    mMap.insert(std::pair<std::string, VisualObject*>{"Sun", mSun});
 
     //Create camera
     mCamera = new Camera();
     //creating objects to be drawn
     mMap.insert(std::pair<std::string, VisualObject*>{"Plane",
-                new ObjMesh("../EksamenAdam3DProg/plane.obj", *mShaders["LightShader"], new Texture("../EksamenAdam3DProg/hammer.bmp"))});
-    mMap.insert(std::pair<std::string, VisualObject*>{"Cube",
-                new Cube(*mShaders["PlainShader"])});
+                new ObjMesh("../EksamenAdam3DProg/plane.obj", *mShaders["LightShader"], mTextures["Hammer"])});
     mMap.insert(std::pair<std::string, VisualObject*>{"Dog",
-                new ObjMesh("../EksamenAdam3DProg/object.obj", *mShaders["LightShader"], new Texture("../EksamenAdam3DProg/hund.bmp"))});
+                new ObjMesh("../EksamenAdam3DProg/object.obj", *mShaders["LightShader"], mTextures["Hund"])});
 
     //Oppgave 2
     //Init terrenget med phongshaderen og GrassTekstur
-    mTerrain = new Terrain(*mShaders["LightShader"], new Texture("../EksamenAdam3DProg/GrassTekstur.bmp"));
+    mTerrain = new Terrain(*mShaders["LightShader"], mTextures["Grass"]);
+
     mMap.insert(std::pair<std::string, VisualObject*>{"Terrain", mTerrain});
     //mMap["Terrain"]->SetPosition(QVector3D(0, -11, 0));
 
@@ -147,27 +145,16 @@ void RenderWindow::init()
     mMap["Plane"]->SetRotation(QVector3D(1, 0, 0));
     mMap["Plane"]->SetScale(QVector3D(5, 5, 5));
 
-    for(int i = 0; i < 10; i++){
-        //Construct point light with light shader and with its index, so it call set it correctly in the draw function
-        mMap.insert(std::pair<std::string, VisualObject*>{"PointLight " + std::to_string(i), new PointLight(*mShaders["LightShader"], new Texture(),mPointLights)});
-        mMap["PointLight " + std::to_string(i)]->SetPosition(QVector3D(-30 + rand() % 60, rand() % 8, -30 + rand() % 60));
-        mPointLights++;
-    }
-    //Set the lightshader.frag's pointLightUsed to the amount of point lights
-    mShaders["LightShader"]->SetUniform1i(mPointLights, "pointLightsUsed");
+    //Trenger ikke point lights for eksamen
+   //for(int i = 0; i < 10; i++){
+   //    //Construct point light with light shader and with its index, so it call set it correctly in the draw function
+   //    mMap.insert(std::pair<std::string, VisualObject*>{"PointLight " + std::to_string(i), new PointLight(*mShaders["LightShader"], mTextures["Plain"],mPointLights)});
+   //    mMap["PointLight " + std::to_string(i)]->SetPosition(QVector3D(-30 + rand() % 60, rand() % 8, -30 + rand() % 60));
+   //    mPointLights++;
+   //}
+   ////Set the lightshader.frag's pointLightUsed to the amount of point lights
+   //mShaders["LightShader"]->SetUniform1i(mPointLights, "pointLightsUsed");
 
-    //Trophies
-    for(int i = 0; i < 10; i++){
-        //Creat trophies
-        mMap.insert(std::pair<std::string, VisualObject*>{"Trophy " + std::to_string(i), new Trophy("../EksamenAdam3DProg/trophy.obj", *mShaders["LightShader"], new Texture())});
-        mMap["Trophy " + std::to_string(i)]->SetPosition(QVector3D(-20 + rand() % 40, 0, -20 + rand() % 40));
-    }
-    //Enemies
-    for(int i = 0; i < 10; i++){
-        //Creat trophies
-        mMap.insert(std::pair<std::string, VisualObject*>{"Enemy " + std::to_string(i), new Enemy("../EksamenAdam3DProg/enemy.obj", *mShaders["LightShader"], new Texture())});
-        mMap["Enemy " + std::to_string(i)]->SetPosition(QVector3D(-100 + rand() % 200, 0, -100 + rand() % 200));
-    }
     //Subdivide quadtree
     mQuadTree.subDivide(2);
     //init every object
@@ -201,7 +188,14 @@ void RenderWindow::render()
     mMap["Dog"]->SetPosition(QVector3D(dogPos.x(), mTerrain->GetHeight(dogPos), dogPos.z()));
     dogPos = mMap["Dog"]->GetPosition();
     mCamera->lookAt(dogPos + QVector3D(0,5, -5), dogPos, QVector3D{ 0,1,0 });
-
+    float radius = 20;
+    mSun->angle += 0.01f;
+    QVector3D sunPos = mSun->GetPosition();
+    sunPos.setX((cos(mSun->angle)*radius));
+    sunPos.setY(5);
+    sunPos.setZ((sin(mSun->angle)*radius));
+    mSun->SetPosition(sunPos);
+    //Move sun randomly
     //Apply camera to all shaders
     for(auto it = mShaders.begin(); it != mShaders.end(); it++){
         (*it).second->use();
@@ -214,6 +208,9 @@ void RenderWindow::render()
             //Give all lights the camera position
             (*it).second->SetUniform3f(mCamera->GetPosition().x(), mCamera->GetPosition().y(), mCamera->GetPosition().y(),
                                        "cameraPosition");
+            //Set light posistion
+            (*it).second->SetUniform3f(mMap["Sun"]->GetPosition().x(), mMap["Sun"]->GetPosition().y(), mMap["Sun"]->GetPosition().z(),
+                                        "lightPosition");
         }
 
     }

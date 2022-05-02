@@ -9,6 +9,7 @@
 #include "texture.h"
 ObjMesh::ObjMesh(std::string fileName, Shader& shader) : VisualObject(shader)
 {
+    mTexture = nullptr;
     readFile(fileName);
     mMatrix.setToIdentity();
 }
@@ -63,6 +64,8 @@ void ObjMesh::draw(){
        glActiveTexture(GL_TEXTURE0);
        glBindTexture(GL_TEXTURE_2D, mTexture->id());
        glUniform1i(mTextureUniform, 0);
+    }else{
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
     //use my shader
     glUseProgram(mShader.getProgram());

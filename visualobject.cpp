@@ -42,6 +42,9 @@ void VisualObject::init(){
 }
 
 void VisualObject::draw(){
+    if(!mTexture){
+        glBindTexture(GL_TEXTURE_2D,0);
+    }
     glBindVertexArray(mVAO);
     glUniformMatrix4fv(mMatrixUniform, 1, GL_FALSE, mMatrix.constData());
     glDrawArrays(GL_TRIANGLES, 0, mVertices.size());//mVertices.size());

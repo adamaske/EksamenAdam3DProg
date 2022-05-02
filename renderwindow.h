@@ -14,7 +14,8 @@ class VisualObject;
 class Camera;
 class PointLight;
 class Terrain;
-
+class Texture;
+class VisualSun;
 /// This inherits from QWindow to get access to the Qt functionality and
 // OpenGL surface.
 // We also inherit from QOpenGLFunctions, to get access to the OpenGL functions
@@ -44,10 +45,12 @@ private:
     //Referance to camera
     Camera *mCamera;
     Terrain* mTerrain;
+    VisualSun* mSun;
     QOpenGLContext *mContext{nullptr};  //Our OpenGL context
     bool mInitialized{false};
     int mPointLights = 0;
     std::unordered_map<std::string, Shader*> mShaders;
+    std::unordered_map<std::string, Texture*> mTextures;
     Shader *mShaderProgram{nullptr};    //holds pointer the GLSL shader program
     GLint mMatrixUniform;              //OpenGL reference to the Uniform in the shader program
     GLint mPMatrixUniform;

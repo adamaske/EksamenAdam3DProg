@@ -18,6 +18,8 @@ Terrain::Terrain(Shader& shader, Texture* texture) : VisualObject(shader)
     float yScale = 64.0f / 256.0f, yShift = 32.0f;
     unsigned char* texel;
     unsigned char y;
+    qDebug() << height;
+    qDebug() << width;
     for( int i = 0; i < height; i++)
     {
         for( int j = 0; j < width; j++)
@@ -59,6 +61,7 @@ Terrain::Terrain(Shader& shader, Texture* texture) : VisualObject(shader)
     }
     NUM_STRIPS = height-1;
     NUM_VERTS_PER_STRIP = width*2;
+
     mTexture = texture;
     mMatrix.setToIdentity();
 }
@@ -118,9 +121,12 @@ float Terrain::GetHeight(QVector3D pos){
     //qDebug() << height << width;
     //Find what width and height the pos is at
     //and compare to the vertex data of the terrain
+    //Convert pos to correct
+    pos.setX(pos.x() + width/ 2);
+    pos.setZ(pos.z() + height / 2);
     //Converts the float pos.x() to an in, so it can be used to refrence index'es form the vertex array
-    float x = pos.x();
-    float z = pos.z();
+    int x = pos.x();
+    int z = pos.z();
     qDebug()<< "Player pos: " << x << ", " << z;
     //First vertex of the triangle
     Vertex v1 = mVertices[(x*(width))+z];
@@ -137,7 +143,7 @@ float Terrain::GetHeight(QVector3D pos){
         float b = v2.y * bary.y();
         float c = v3.y * bary.z();
         float height = a + b + c;
-        qDebug() << "Using top vertex:  " << height;
+       // qDebug() << "Using top vertex:  " << height;
         return height + 32;
     }else{
               bary = GetBaycentric(pos, QVector3D(v1.x, v1.y, v1.z), QVector3D(v2.x, v2.y, v2.z), QVector3D(v4.x, v4.y, v4.z));
@@ -145,7 +151,7 @@ float Terrain::GetHeight(QVector3D pos){
         float b = v2.y * bary.y();
         float c = v4.y * bary.z();
         float height = a + b + c;
-        qDebug() << "Using bottom vertex: " << height;
+        //qDebug() << "Using bottom vertex: " << height;
         return height + 32;
     }
 
@@ -185,7 +191,7 @@ QVector3D Terrain::GetBaycentric(QVector3D point, QVector3D a,  QVector3D b, QVe
     //Kryssprodukt for w, delt på x
     normal = QVector3D::crossProduct(p, q);
     w = normal.y() / x;
-    qDebug() << u << v << w;
+    //qDebug() << u << v << w;
     //Finn om punkten er innenfor eller utenfor triangelt
     return QVector3D(u, v, w);
 }
