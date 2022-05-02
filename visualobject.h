@@ -31,6 +31,9 @@ public:
    virtual void move(float dx, float dy, float dz);
    virtual void move(float dt);
 
+   virtual void MoveForward(float amount);
+   virtual void MoveRight(float amount);
+
    QVector3D GetScale() const;
    void SetScale(const QVector3D& scale);
    void SetScale(const QMatrix4x4& scale);
@@ -38,7 +41,7 @@ public:
    QMatrix4x4 GetRotation() const;
    void SetRotation(const QVector3D& rotation);
    void rotate(float dx, float dy, float dz);
-
+   void RotateRight(float amount);
 protected:
    std::vector<Vertex> mVertices;
    std::vector<GLuint> mIndices;

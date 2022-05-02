@@ -124,36 +124,20 @@ void RenderWindow::init()
     mMap.insert(std::pair<std::string, VisualObject*>{"Sun", mSun});
 
     //Create camera
-    mCamera = new Camera();
-    //creating objects to be drawn
-    mMap.insert(std::pair<std::string, VisualObject*>{"Plane",
-                new ObjMesh("../EksamenAdam3DProg/plane.obj", *mShaders["LightShader"], mTextures["Hammer"])});
-    mMap.insert(std::pair<std::string, VisualObject*>{"Dog",
+    mPlayCamera = new Camera();
+    mEditorCamera = new Camera();
+    //Oppgave 4
+    //Lager player fra object.obj, gir phongshader og hund tekstur
+    mMap.insert(std::pair<std::string, VisualObject*>{"Player",
                 new ObjMesh("../EksamenAdam3DProg/object.obj", *mShaders["LightShader"], mTextures["Hund"])});
+    mMap["Player"]->SetRotation(QVector3D(0, -1, 0));
+    mMap["Player"]->SetPosition(QVector3D(0, 0, 0));
 
     //Oppgave 2
     //Init terrenget med phongshaderen og GrassTekstur
     mTerrain = new Terrain(*mShaders["LightShader"], mTextures["Grass"]);
 
     mMap.insert(std::pair<std::string, VisualObject*>{"Terrain", mTerrain});
-    //mMap["Terrain"]->SetPosition(QVector3D(0, -11, 0));
-
-    mMap["Dog"]->SetRotation(QVector3D(0, -1, 0));
-    mMap["Dog"]->SetPosition(QVector3D(0, 0, 0));
-
-    mMap["Plane"]->SetPosition(QVector3D(0, 4, 20));
-    mMap["Plane"]->SetRotation(QVector3D(1, 0, 0));
-    mMap["Plane"]->SetScale(QVector3D(5, 5, 5));
-
-    //Trenger ikke point lights for eksamen
-   //for(int i = 0; i < 10; i++){
-   //    //Construct point light with light shader and with its index, so it call set it correctly in the draw function
-   //    mMap.insert(std::pair<std::string, VisualObject*>{"PointLight " + std::to_string(i), new PointLight(*mShaders["LightShader"], mTextures["Plain"],mPointLights)});
-   //    mMap["PointLight " + std::to_string(i)]->SetPosition(QVector3D(-30 + rand() % 60, rand() % 8, -30 + rand() % 60));
-   //    mPointLights++;
-   //}
-   ////Set the lightshader.frag's pointLightUsed to the amount of point lights
-   //mShaders["LightShader"]->SetUniform1i(mPointLights, "pointLightsUsed");
 
     //Subdivide quadtree
     mQuadTree.subDivide(2);
@@ -180,38 +164,77 @@ void RenderWindow::render()
     //clear the screen for each redraw
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    mCamera->init();
+    switch(mGameState){
+    //
+    case GameState::Editor :
+        mEditorCamera->perspective(90, static_cast<float>(width()) / static_cast<float>(height()), 0.1, 3000.0);
+    break;
+        //Sett kamera bak spilleren
+    case GameState::Play :
+        mPlayCamera->perspective(90, static_cast<float>(width()) / static_cast<float>(height()), 0.1, 3000.0); // verticalAngle, aspectRatio, nearPlane,farPlane
+        QVector3D PlayerPos = mMap["Player"]->GetPosition();
+        //Set y to GetHeight from terrain
+        mMap["Player"]->SetPosition(QVector3D(PlayerPos.x(), mTerrain->GetHeight(PlayerPos), PlayerPos.z()));
+        PlayerPos = mMap["Player"]->GetPosition();
+        mPlayCamera->lookAt(PlayerPos + QVector3D(0,5, -5), PlayerPos, QVector3D{ 0,1,0 });
 
-    mCamera->perspective(90, static_cast<float>(width()) / static_cast<float>(height()), 0.1, 3000.0); // verticalAngle, aspectRatio, nearPlane,farPlane
-    QVector3D dogPos = mMap["Dog"]->GetPosition();
-    //Set y to GetHeight from terrain
-    mMap["Dog"]->SetPosition(QVector3D(dogPos.x(), mTerrain->GetHeight(dogPos), dogPos.z()));
-    dogPos = mMap["Dog"]->GetPosition();
-    mCamera->lookAt(dogPos + QVector3D(0,5, -5), dogPos, QVector3D{ 0,1,0 });
-    float radius = 20;
+    break;
+    }
+
+
+    //Oppgave 3
+    //Adder vinkelen den er på
     mSun->angle += 0.01f;
+    //Hent posisjonen
     QVector3D sunPos = mSun->GetPosition();
-    sunPos.setX((cos(mSun->angle)*radius));
-    sunPos.setY(5);
-    sunPos.setZ((sin(mSun->angle)*radius));
+    //Cosinus vinkelen ganger radius for x
+    sunPos.setX((cos(mSun->angle)*20));
+    //Set til 20 meter over bakken
+    sunPos.setY(20);
+    //Sinus vinkelen ganger radius for z
+    sunPos.setZ((sin(mSun->angle)*20));
+    //Sett nye posisjonen
     mSun->SetPosition(sunPos);
-    //Move sun randomly
+
     //Apply camera to all shaders
     for(auto it = mShaders.begin(); it != mShaders.end(); it++){
         (*it).second->use();
-        //Send view and projection matrices to alle the shaders
-        (*it).second->SetUniformMatrix4fv(*mCamera->mVmatrix, "vMatrix");
-        (*it).second->SetUniformMatrix4fv(*mCamera->mPmatrix, "pMatrix");
-        //glUnifor
-        //The visual object sends its own modelMatrix to the shader so it dosent need to be done here
-        if((*it).first == "LightShader"){
-            //Give all lights the camera position
-            (*it).second->SetUniform3f(mCamera->GetPosition().x(), mCamera->GetPosition().y(), mCamera->GetPosition().y(),
-                                       "cameraPosition");
-            //Set light posistion
-            (*it).second->SetUniform3f(mMap["Sun"]->GetPosition().x(), mMap["Sun"]->GetPosition().y(), mMap["Sun"]->GetPosition().z(),
-                                        "lightPosition");
+        //
+        switch(mGameState){
+        //Send editor kamera sin v og p matrix hvis spillet er i editor modus
+        case GameState::Editor :
+            //Send view and projection matrices to alle the shaders
+            (*it).second->SetUniformMatrix4fv(*mEditorCamera->mVmatrix, "vMatrix");
+            (*it).second->SetUniformMatrix4fv(*mEditorCamera->mPmatrix, "pMatrix");
+            //glUnifor
+            //The visual object sends its own modelMatrix to the shader so it dosent need to be done here
+            if((*it).first == "LightShader"){
+                //Give all lights the camera position
+                (*it).second->SetUniform3f(mEditorCamera->GetPosition().x(), mEditorCamera->GetPosition().y(), mEditorCamera->GetPosition().y(),
+                                           "cameraPosition");
+
+            }
+        break;
+            //Bruk play kameraet
+        case GameState::Play :
+            //Send view and projection matrices to alle the shaders
+            (*it).second->SetUniformMatrix4fv(*mPlayCamera->mVmatrix, "vMatrix");
+            (*it).second->SetUniformMatrix4fv(*mPlayCamera->mPmatrix, "pMatrix");
+            //glUnifor
+            //The visual object sends its own modelMatrix to the shader so it dosent need to be done here
+            if((*it).first == "LightShader"){
+                //Give all lights the camera position
+                (*it).second->SetUniform3f(mPlayCamera->GetPosition().x(), mPlayCamera->GetPosition().y(), mPlayCamera->GetPosition().y(),
+                                           "cameraPosition");
+            }
+        break;
         }
+        //Set light posistion
+        (*it).second->SetUniform3f(mMap["Sun"]->GetPosition().x(), mMap["Sun"]->GetPosition().y(), mMap["Sun"]->GetPosition().z(),
+                                    "lightPosition");
+
+
+
 
     }
 
@@ -349,33 +372,74 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
     {
         mMainWindow->close();       //Shuts down the whole program
     }
-    if (event->key() == Qt::Key_Space)
-    {
 
-    }
     if (event->key() == Qt::Key_W)
     {
-        mMap["Dog"]->move(0,0,1.1f);       //Shuts down the whole program
+        switch(mGameState){
+        case GameState::Editor :
+            //Beveg kamera fremover
+        break;
+        case GameState::Play :
+            //beveg hunden fremover
+            mMap["Player"]->MoveForward(1);
+        break;
+        }
     }
     if (event->key() == Qt::Key_S)
     {
-        mMap["Dog"]->move(0,0,-1.1f);       //Shuts down the whole program
+        switch(mGameState){
+        case GameState::Editor :
+        //beveg kamera bakover
+        break;
+        case GameState::Play :
+        //beveg hunden bakover
+            mMap["Player"]->MoveForward(-1);
+        break;
+        }
     }
     if (event->key() == Qt::Key_A)
     {
-        mMap["Dog"]->move(1.1f, 0,0);       //Shuts down the whole program
+        switch(mGameState){
+        case GameState::Editor :
+        //  Roter kamera til venstre
+        break;
+        case GameState::Play :
+        //Roter hunden til venstre
+            mMap["Player"]->MoveRight(-1);
+        break;
+        }
     }
     if (event->key() == Qt::Key_D)
     {
-        mMap["Dog"]->move(-1.1f, 0,0);       //Shuts down the whole program
+        switch(mGameState){
+        case GameState::Editor :
+        //Roter kamera til høyre
+        break;
+        case GameState::Play :
+        //Roter hunden til høyre
+            mMap["Player"]->MoveRight(1);
+        break;
+        }
     }
     if (event->key() == Qt::Key_Q)
     {
-        mMap["Dog"]->move(0, 1,0);       //Shuts down the whole program
+        switch(mGameState){
+        case GameState::Editor :
+        //Beveg kamera oppover
+        break;
+        case GameState::Play :
+        break;
+        }
     }
     if (event->key() == Qt::Key_E)
     {
-        mMap["Dog"]->move(0, -1,0);       //Shuts down the whole program
+        switch(mGameState){
+        case GameState::Editor :
+        //beveg kamera bakover
+        break;
+        case GameState::Play :
+        break;
+        }
     }
     //You get the keyboard input like this
 //    if(event->key() == Qt::Key_A)

@@ -16,6 +16,8 @@ class PointLight;
 class Terrain;
 class Texture;
 class VisualSun;
+
+enum GameState{Editor, Play}
 /// This inherits from QWindow to get access to the Qt functionality and
 // OpenGL surface.
 // We also inherit from QOpenGLFunctions, to get access to the OpenGL functions
@@ -42,10 +44,16 @@ private:
     //Alt som renders i Map
     std::unordered_map<std::string, VisualObject*> mMap;
     QuadTree<std::string, VisualObject*> mQuadTree;
-    //Referance to camera
-    Camera *mCamera;
+    //Referanse til kamera som følger spiller
+    Camera *mPlayCamera;
+    Camera *mEditorCamera;
+    //Referanse til terrenget
     Terrain* mTerrain;
+    //Refereanse til solen
     VisualSun* mSun;
+    //Enum til holde editor og play modus
+    GameState mGameState = GameState::Play;
+
     QOpenGLContext *mContext{nullptr};  //Our OpenGL context
     bool mInitialized{false};
     int mPointLights = 0;
