@@ -21,6 +21,7 @@
 #include "trophy.h"
 #include "enemy.h"
 #include "visualsun.h"
+#include "xyz.h"
 RenderWindow::RenderWindow(const QSurfaceFormat &format, MainWindow *mainWindow)
     : mContext(nullptr), mInitialized(false), mMainWindow(mainWindow), mQuadTree(Point2D(50,50), Point2D(-50,50), Point2D(50,-50), Point2D(-50,-50))
 
@@ -120,7 +121,7 @@ void RenderWindow::init()
     mTextures.insert(std::pair<std::string, Texture*>{"Hammer", new Texture("../EksamenAdam3DProg/hammer.bmp")});
     mTextures.insert(std::pair<std::string, Texture*>{"Grass", new Texture("../EksamenAdam3DProg/GrassTekstur.bmp")});
     //Oppgave 3
-    mSun = new VisualSun("../EksamenAdam3DProg/Sun.obj", *mShaders["PlainShader"]);
+    mSun = new VisualSun("../EksamenAdam3DProg/Sun.obj", *mShaders["PlainShader"], ObjectState::STATIC);
     mMap.insert(std::pair<std::string, VisualObject*>{"Sun", mSun});
 
     //Create camera
@@ -129,16 +130,19 @@ void RenderWindow::init()
     //Oppgave 4
     //Lager player fra object.obj, gir phongshader og hund tekstur
     mMap.insert(std::pair<std::string, VisualObject*>{"Player",
-                new ObjMesh("../EksamenAdam3DProg/object.obj", *mShaders["LightShader"], mTextures["Hund"])});
+                new ObjMesh("../EksamenAdam3DProg/object.obj", *mShaders["LightShader"], mTextures["Hund"], ObjectState::DYNAMIC)});
     mMap["Player"]->SetRotation(QVector3D(0, -1, 0));
     mMap["Player"]->SetPosition(QVector3D(0, 0, 0));
 
     //Oppgave 2
     //Init terrenget med phongshaderen og GrassTekstur
-    mTerrain = new Terrain(*mShaders["LightShader"], mTextures["Grass"]);
+    mTerrain = new Terrain(*mShaders["LightShader"], mTextures["Grass"], ObjectState::STATIC);
 
     mMap.insert(std::pair<std::string, VisualObject*>{"Terrain", mTerrain});
 
+    //Oppgave 6
+    mXYZ = new XYZ(*mShaders["PlainShader"], ObjectState::STATIC);
+    mXYZ->init();
     //Subdivide quadtree
     mQuadTree.subDivide(2);
     //init every object
@@ -167,17 +171,20 @@ void RenderWindow::render()
     switch(mGameState){
     //
     case GameState::Editor :
+        mEditorCamera->init();
         mEditorCamera->perspective(90, static_cast<float>(width()) / static_cast<float>(height()), 0.1, 3000.0);
+        //Yaw til kamera med mus input her
+
     break;
         //Sett kamera bak spilleren
     case GameState::Play :
+        mPlayCamera->init();
         mPlayCamera->perspective(90, static_cast<float>(width()) / static_cast<float>(height()), 0.1, 3000.0); // verticalAngle, aspectRatio, nearPlane,farPlane
         QVector3D PlayerPos = mMap["Player"]->GetPosition();
         //Set y to GetHeight from terrain
         mMap["Player"]->SetPosition(QVector3D(PlayerPos.x(), mTerrain->GetHeight(PlayerPos), PlayerPos.z()));
         PlayerPos = mMap["Player"]->GetPosition();
         mPlayCamera->lookAt(PlayerPos + QVector3D(0,5, -5), PlayerPos, QVector3D{ 0,1,0 });
-
     break;
     }
 
@@ -229,13 +236,19 @@ void RenderWindow::render()
             }
         break;
         }
+        //Send view and projection matrices to alle the shaders
+        (*it).second->SetUniformMatrix4fv(*mPlayCamera->mVmatrix, "vMatrix");
+        (*it).second->SetUniformMatrix4fv(*mPlayCamera->mPmatrix, "pMatrix");
+        //glUnifor
+        //The visual object sends its own modelMatrix to the shader so it dosent need to be done here
+        if((*it).first == "LightShader"){
+            //Give all lights the camera position
+            (*it).second->SetUniform3f(mPlayCamera->GetPosition().x(), mPlayCamera->GetPosition().y(), mPlayCamera->GetPosition().y(),
+                                       "cameraPosition");
+        }
         //Set light posistion
         (*it).second->SetUniform3f(mMap["Sun"]->GetPosition().x(), mMap["Sun"]->GetPosition().y(), mMap["Sun"]->GetPosition().z(),
                                     "lightPosition");
-
-
-
-
     }
 
     //Draw all objects
@@ -243,6 +256,16 @@ void RenderWindow::render()
         //Set the shader matrixes from camera
         (*it).second->UpdateTransform();
         (*it).second->draw();
+
+        switch(mGameState){
+            case GameState::Editor :
+            //Oppgave 6
+            mXYZ->draw();
+        break;
+            case GameState::Play :
+
+        break;
+        }
     }
 
     //Qt require us to call this swapBuffers() -function.
@@ -405,7 +428,7 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
         break;
         case GameState::Play :
         //Roter hunden til venstre
-            mMap["Player"]->MoveRight(-1);
+            mMap["Player"]->RotateRight(1);
         break;
         }
     }
@@ -417,7 +440,7 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
         break;
         case GameState::Play :
         //Roter hunden til høyre
-            mMap["Player"]->MoveRight(1);
+            mMap["Player"]->RotateRight(-1);
         break;
         }
     }
@@ -441,6 +464,15 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
         break;
         }
     }
+    if (event->key() == Qt::Key_Tab)
+    {
+        if(mGameState == GameState::Editor){
+
+            mGameState = GameState::Play;
+        }else{
+            mGameState = GameState::Editor;
+        }
+    }
     //You get the keyboard input like this
 //    if(event->key() == Qt::Key_A)
 //    {
@@ -450,4 +482,15 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
 //    {
 //        mMainWindow->statusBar()->showMessage(" SSSS");
 //    }
+    qDebug()<< "Player pos: " << mMap["Player"]->GetPosition();
+}
+
+void RenderWindow::SwapGameMode(){
+    if(mGameState == GameState::Editor){
+        qDebug() << "In play mode";
+        mGameState = GameState::Play;
+    }else{
+        qDebug() << "In editor mode";
+        mGameState = GameState::Editor;
+    }
 }

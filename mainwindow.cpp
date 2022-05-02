@@ -80,13 +80,13 @@ void MainWindow::on_rotationButton_toggled(bool checked)
 {
     if(checked)
     {
-        mRenderWindow->mRotate = true;
-        ui->rotationButton->setText("Stop rotation");
+        mRenderWindow->SwapGameMode();
+        ui->rotationButton->setText("Editor Mode");
     }
     else
     {
-        mRenderWindow->mRotate = false;
-        ui->rotationButton->setText("Start rotation");
+        mRenderWindow->SwapGameMode();
+        ui->rotationButton->setText("Play Mode");
     }
 }
 

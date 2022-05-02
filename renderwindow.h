@@ -16,8 +16,10 @@ class PointLight;
 class Terrain;
 class Texture;
 class VisualSun;
+class Enemy;
+class XYZ;
 
-enum GameState{Editor, Play}
+enum GameState{Editor, Play};
 /// This inherits from QWindow to get access to the Qt functionality and
 // OpenGL surface.
 // We also inherit from QOpenGLFunctions, to get access to the OpenGL functions
@@ -33,7 +35,7 @@ public:
 
     void exposeEvent(QExposeEvent *) override;  //gets called when app is shown and resized
 
-    bool mRotate{true};     //Check if triangle should rotate
+     void SwapGameMode();
 
 private slots:
     void render();          //the actual render - function
@@ -51,8 +53,13 @@ private:
     Terrain* mTerrain;
     //Refereanse til solen
     VisualSun* mSun;
+    //Bomber man
+    Enemy* mBomberEnemy;
+    //Aksene
+    XYZ* mXYZ;
     //Enum til holde editor og play modus
     GameState mGameState = GameState::Play;
+
 
     QOpenGLContext *mContext{nullptr};  //Our OpenGL context
     bool mInitialized{false};

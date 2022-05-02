@@ -2,12 +2,13 @@
 #include "vertex.h"
 #include "shader.h"
 #include "texture.h"
-VisualObject::VisualObject(Shader& shader) : mShader{shader}
+VisualObject::VisualObject(Shader& shader, ObjectState state) : mShader{shader}
 {
     mMatrix.setToIdentity();
 }
-VisualObject::VisualObject(Shader& shader, Texture* texture) : mShader{shader}, mTexture{texture}
+VisualObject::VisualObject(Shader& shader, Texture* texture, ObjectState state) : mShader{shader}, mTexture{texture}
 {
+    mObjectState = state;
     if(mTexture){
         //mTextureUniform = glGetUniformLocation(mShader.getProgram(), "textureSampler");
     }
@@ -82,14 +83,34 @@ void VisualObject::move(float dt)
     mMatrix = mPosition * mRotation * mScale;
 }
 
+void VisualObject::MoveForward(float amount){
+    //Z is forward in the world
+    QVector3D fwd{0,0,amount};
+    qDebug() << mPosition;
+    mPosition.translate(amount * GetForward());
+}
+void VisualObject::MoveRight(float amount){
+    //X is right in the world
+    QVector3D right{amount,0,0};
+    mPosition.translate(right * GetRight());
+}
 void VisualObject::rotate(float dx, float dy, float dz)
 {
     mMatrix.rotate(dx, dy, dz);
+}
+
+void VisualObject::RotateRight(float amount){
+    mRotation.rotate(amount, QVector3D{0, 1, 0});
 }
 std::pair<float, float> VisualObject::getPosition2D()
 {
     auto col = mPosition.column(3);
     return std::pair<float, float>(col.x(), col.z());
+}
+
+void VisualObject::Update()
+{
+
 }
 void VisualObject::UpdateTransform()
 {
@@ -141,4 +162,14 @@ void VisualObject::SetRotation(const QVector3D& rotation)
 {
     mRotation.setToIdentity();
     mRotation.rotate(90.f, rotation);
+}
+
+QVector3D VisualObject::GetForward(){
+    QVector3D fwd = mMatrix.column(3).toVector3DAffine();
+
+    return fwd;
+}
+QVector3D VisualObject::GetRight(){
+    QVector3D rgt = mMatrix.column(2).toVector3DAffine();
+    return rgt;
 }

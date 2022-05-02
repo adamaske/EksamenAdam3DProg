@@ -18,7 +18,7 @@
     <item>
      <widget class="QPushButton" name="rotationButton">
       <property name="text">
-       <string>Stop rotation</string>
+       <string>Editor Mode</string>
       </property>
       <property name="checkable">
        <bool>true</bool>
@@ -39,7 +39,7 @@
      <x>0</x>
      <y>0</y>
      <width>1396</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

@@ -13,8 +13,8 @@ uniform float ambientStrength = 0.1;
 
 uniform vec3 lightPosition;
 uniform vec3 lightColor = vec3(1, 1, 1);  //blueish
-uniform float lightStrength = 0.8;
-uniform float specularStrength = 0.5;
+uniform float lightStrength = 1;
+uniform float specularStrength = 0.9;
 uniform int specularExponent = 32;
 
 uniform vec3 objectColor = vec3(1.0, 1.0, 1.0); //white

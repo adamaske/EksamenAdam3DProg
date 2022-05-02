@@ -5,7 +5,7 @@
 class Terrain : public VisualObject
 {
 public:
-    Terrain(Shader& shader, Texture* texture);
+    Terrain(Shader& shader, Texture* texture, ObjectState state);
     void init() override;
     void draw() override;
     unsigned int NUM_STRIPS = 0;

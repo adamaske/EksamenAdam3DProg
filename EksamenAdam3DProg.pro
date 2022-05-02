@@ -24,7 +24,8 @@ SOURCES += main.cpp \
     vector3d.cpp \
     vertex.cpp \
     visualobject.cpp \
-    visualsun.cpp
+    visualsun.cpp \
+    xyz.cpp
 
 HEADERS += \
     QuadTree.h \
@@ -47,7 +48,8 @@ HEADERS += \
     vector3d.h \
     vertex.h \
     visualobject.h \
-    visualsun.h
+    visualsun.h \
+    xyz.h
 
 FORMS += \
     mainwindow.ui

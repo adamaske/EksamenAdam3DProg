@@ -6,7 +6,7 @@
 class VisualSun : public ObjMesh
 {
 public:
-    VisualSun(std::string fileName, Shader& shader);
+    VisualSun(std::string fileName, Shader& shader, ObjectState state);
     float angle = 0;
 
 };

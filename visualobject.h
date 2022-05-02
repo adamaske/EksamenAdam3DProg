@@ -14,14 +14,15 @@ class Shader;
 class Texture;
 class VisualObject : public QOpenGLFunctions_4_1_Core {
 public:
-   VisualObject(Shader& shader);
-   VisualObject(Shader& shader, Texture* texture);
+   VisualObject(Shader& shader, ObjectState state);
+   VisualObject(Shader& shader, Texture* texture, ObjectState);
    ~VisualObject();
    virtual void init();
    virtual void draw();
 
+   ObjectState mObjectState;
    std::pair<float, float> getPosition2D();
-
+   virtual void Update();
    void UpdateTransform();
 
    QMatrix4x4 GetPosition() const;
@@ -42,6 +43,8 @@ public:
    void SetRotation(const QVector3D& rotation);
    void rotate(float dx, float dy, float dz);
    void RotateRight(float amount);
+   QVector3D GetForward();
+   QVector3D GetRight();
 protected:
    std::vector<Vertex> mVertices;
    std::vector<GLuint> mIndices;
@@ -56,6 +59,7 @@ protected:
    QMatrix4x4 mScale;
    // Legger til rette for simulering
    QVector3D mVelocity;
+   QVector3D mDirection;
    //Kollisjoner
    QVector3D mSize;
    //Referanse til en mCollision, som er en kollisjonshape

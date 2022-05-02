@@ -6,7 +6,7 @@
 class Trophy : public ObjMesh
 {
 public:
-    Trophy(std::string fileName, Shader& shader, Texture* texture);
+    Trophy(std::string fileName, Shader& shader, Texture* texture, ObjectState state);
     void init() override;
     void draw() override;
 

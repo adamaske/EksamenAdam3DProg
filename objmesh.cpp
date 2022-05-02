@@ -7,13 +7,13 @@
 #include "shader.h"
 #include "vertex.h"
 #include "texture.h"
-ObjMesh::ObjMesh(std::string fileName, Shader& shader) : VisualObject(shader)
+ObjMesh::ObjMesh(std::string fileName, Shader& shader, ObjectState state) : VisualObject(shader, state)
 {
     mTexture = nullptr;
     readFile(fileName);
     mMatrix.setToIdentity();
 }
-ObjMesh::ObjMesh(std::string fileName, Shader& shader, Texture* texture) : VisualObject(shader)
+ObjMesh::ObjMesh(std::string fileName, Shader& shader, Texture* texture, ObjectState state) : VisualObject(shader, texture, state)
 {
     mTexture = texture;
 
@@ -57,6 +57,11 @@ void ObjMesh::init(){
         mTextureUniform = glGetUniformLocation(mShader.getProgram(), "textureSampler");
     }
     glBindVertexArray(0);
+}
+
+void ObjMesh::Update()
+{
+
 }
 
 void ObjMesh::draw(){

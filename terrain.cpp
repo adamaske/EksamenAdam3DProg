@@ -4,7 +4,7 @@
 #include "shader.h"
 #include "vertex.h"
 #include "texture.h"
-Terrain::Terrain(Shader& shader, Texture* texture) : VisualObject(shader)
+Terrain::Terrain(Shader& shader, Texture* texture, ObjectState state) : VisualObject(shader, texture, state)
 {
 
     //Array of pixel data, load function sets the width, height and channels read from the image
@@ -127,7 +127,7 @@ float Terrain::GetHeight(QVector3D pos){
     //Converts the float pos.x() to an in, so it can be used to refrence index'es form the vertex array
     int x = pos.x();
     int z = pos.z();
-    qDebug()<< "Player pos: " << x << ", " << z;
+
     //First vertex of the triangle
     Vertex v1 = mVertices[(x*(width))+z];
     //Get the vertex to the right of v1

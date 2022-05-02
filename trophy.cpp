@@ -3,7 +3,7 @@
 #include "vector3d.h"
 #include "vertex.h"
 #include "texture.h"
-Trophy::Trophy(std::string fileName, Shader& shader, Texture* texture) : ObjMesh(fileName ,shader, texture)
+Trophy::Trophy(std::string fileName, Shader& shader, Texture* texture, ObjectState state) : ObjMesh(fileName ,shader, texture, state)
 {
     //readFile(fileName);
     mMatrix.setToIdentity();
