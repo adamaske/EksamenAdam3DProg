@@ -6,6 +6,9 @@ SphereCollision::SphereCollision(QVector3D center, float radius, VisualObject* o
 }
 
 bool SphereCollision::Collide(CollisionShape* col){
+    //Begge er spheres, sjekk kollisjon
+    if(col->mCollisionMode == mCollisionMode){
 
+    }
     return false;
 }

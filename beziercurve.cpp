@@ -1,6 +1,6 @@
 #include "beziercurve.h"
 #include "vertex.h"
-BezierCurve::BezierCurve(std::vector<QVector3D> controlPoints, Shader& shader) : VisualObject(shader, ObjectState::STATIC)
+BezierCurve::BezierCurve(std::vector<QVector3D> controlPoints, Shader& shader) : VisualObject(shader, ObjectState::STATIC, nullptr)
 {
     mControlPoints = controlPoints;
     //Create vertexs from control points

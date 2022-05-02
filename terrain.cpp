@@ -4,7 +4,7 @@
 #include "shader.h"
 #include "vertex.h"
 #include "texture.h"
-Terrain::Terrain(Shader& shader, Texture* texture, ObjectState state) : VisualObject(shader, texture, state)
+Terrain::Terrain(Shader& shader, Texture* texture, ObjectState state) : VisualObject(shader, texture, state, nullptr)
 {
 
     //Array of pixel data, load function sets the width, height and channels read from the image

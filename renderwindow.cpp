@@ -23,6 +23,9 @@
 #include "visualsun.h"
 #include "xyz.h"
 #include "beziercurve.h"
+#include "bomb.h"
+#include "collisionshape.h"
+#include "spherecollision.h"
 RenderWindow::RenderWindow(const QSurfaceFormat &format, MainWindow *mainWindow)
     : mContext(nullptr), mInitialized(false), mMainWindow(mainWindow), mQuadTree(Point2D(50,50), Point2D(-50,50), Point2D(50,-50), Point2D(-50,-50))
 
@@ -153,13 +156,14 @@ void RenderWindow::init()
     bezierControls.push_back(QVector3D(-10, 8, 0));
     bezierControls.push_back(QVector3D(0, 8, 10));
     bezierControls.push_back(QVector3D(10, 8, 0));
-
     //lager bezier kurven
     mBezierCurve = new BezierCurve(bezierControls, *mShaders["PlainShader"]);
     mMap.insert(std::pair<std::string, VisualObject*>{"BezierCurve", mBezierCurve});
+
     //Lager fienden som skal slippe bomber
     mBomberEnemy = new Enemy("../EksamenAdam3DProg/enemy.obj", *mShaders["PlainShader"], mTextures["hund"], ObjectState::STATIC);
     mMap.insert(std::pair<std::string, VisualObject*>{"BomberEnemy", mBomberEnemy});
+
     //Subdivide quadtree
     mQuadTree.subDivide(2);
     //init every object
@@ -229,35 +233,47 @@ void RenderWindow::render()
         //Oppgave 7
         //Beveg bomberen lags bezier kruve
         //Hvis fienden har beveged seg helt til 1, beveg baklengs
-        if(mBomberEnemy->mMovementProgress >= 1){
-            mBomberEnemy->bMovingForward = false;
-        }else if(mBomberEnemy->mMovementProgress <= 0){
-            //Hvis den er negativ, beveg den forover igjen
-            mBomberEnemy->bMovingForward = true;
-        }
-        //Pluss på movement hvis den går fremover, minus hvis den går baklengs
-        if(mBomberEnemy->bMovingForward){
-            mBomberEnemy->mMovementProgress += 0.005f;
-        }else{
-            mBomberEnemy->mMovementProgress -= 0.005f;
-        }
-        //Set posisjonen til fienden langs bezier kurven på t
-        mBomberEnemy->SetPosition(mBezierCurve->EvaluateBezier(mBomberEnemy->mMovementProgress));
-        //Hvis det er mer eller likt 2 sekunder siden forrige bombe, slepp nå
-        if(QTime::currentTime().msec() - 2 >= mLastBombTime.msec()){
-            mLastBombTime = QTime::currentTime();
-            //mMap.insert(std::pari<std::string, VisualObject*>{"Bomb " + mBombs.size(), new Bomb("../EksamenAdam3DProg/enemy.obj", *mShaders["PlainShader"], mTextures["hund"], ObjectState::STATIC)});
-            //mBombs[mBombs.size()-1]->SetPosition(mBomberEnemy->GetPosistion);
+        if(mBomberEnemy){
+            if(mBomberEnemy->mMovementProgress >= 1){
+                mBomberEnemy->bMovingForward = false;
+            }else if(mBomberEnemy->mMovementProgress <= 0){
+                //Hvis den er negativ, beveg den forover igjen
+                mBomberEnemy->bMovingForward = true;
+            }
+            //Pluss på movement hvis den går fremover, minus hvis den går baklengs
+            if(mBomberEnemy->bMovingForward){
+                mBomberEnemy->mMovementProgress += 0.005f;
+            }else{
+                mBomberEnemy->mMovementProgress -= 0.005f;
+            }
+            //Set posisjonen til fienden langs bezier kurven på t
+            mBomberEnemy->SetPosition(mBezierCurve->EvaluateBezier(mBomberEnemy->mMovementProgress));
+            //Hvis det er mer eller likt 2 sekunder siden forrige bombe, slepp nå
+            if(!mLastBombTime.isValid()){
+                mLastBombTime = QTime::currentTime();
+            }
+            if(QTime::currentTime().msec() - 2 >= mLastBombTime.msec()){
+                mLastBombTime = QTime::currentTime();
+                //lager en ny bombe
+                mBombs.push_back(new Bomb("../EksamenAdam3DProg/enemy.obj", *mShaders["PlainShader"], mTextures["hund"], ObjectState::STATIC,
+                        new SphereCollision(QVector3D( 0,0,0), 1, nullptr)));
+                //Setter inn i map
+                mMap.insert(std::pair<std::string, VisualObject*>{"Bomb " + mBombs.size(), mBombs[mBombs.size()-1]});
+                //Setter posisjonen til den til bomberen
+                mBombs[mBombs.size()-1]->SetPosition(mBomberEnemy->GetPosition());
 
+            }
+            //Send bombene need til terrenget
+            for(int i = 0; i < mBombs.size(); i++){
+                //Oppdater senter til bombene kolliderene
+                if(mBombs[i]->GetPosition().y() < mTerrain->GetHeight(mBombs[i]->GetPosition())){
+                    float y = mBombs[i]->GetPosition().y();
+                    y -= 0.07;
+                    //Setter ny y verdi
+                    mBombs[i]->SetPosition(QVector3D(mBombs[i]->GetPosition().x(), y, mBombs[i]->GetPosition().z()));
+                }
+            }
         }
-        //Send bombene need til terrenget
-        //for(int i = 0; i < mBombs.size(); i++){
-        //    if(mBombs[i]->GetPosistion().y() < mTerrain->GetHeight(mBombs[i]->GetPosistion())){
-        //        float y = mBombs[i]->GetPosistion().y());
-        //        y -= 0.07;
-        //        mBombs[i]->SetPosition(mBombs[i]->GetPosistion().x()), y, mBombs[i]->GetPosistion().z())
-        //    }
-        //}
         break;
     }
 

@@ -20,7 +20,7 @@ class VisualSun;
 class Enemy;
 class XYZ;
 class BezierCurve;
-
+class Bomb;
 
 enum GameState{Editor, Play};
 /// This inherits from QWindow to get access to the Qt functionality and
@@ -59,7 +59,8 @@ private:
     //Bomber man
     Enemy* mBomberEnemy;
     QTime mLastBombTime = QTime::currentTime();
-    //std::vector<Bomb*> mBombs;
+    //Vector for bomber
+    std::vector<Bomb*> mBombs;
     BezierCurve* mBezierCurve;
     //Aksene
     XYZ* mXYZ;

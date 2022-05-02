@@ -2,12 +2,15 @@
 #include "vertex.h"
 #include "shader.h"
 #include "texture.h"
-VisualObject::VisualObject(Shader& shader, ObjectState state) : mShader{shader}
+#include "collisionshape.h"
+VisualObject::VisualObject(Shader& shader, ObjectState state, CollisionShape* collision) : mShader{shader} , mCollision{collision}
 {
     mMatrix.setToIdentity();
 }
-VisualObject::VisualObject(Shader& shader, Texture* texture, ObjectState state) : mShader{shader}, mTexture{texture}
+VisualObject::VisualObject(Shader& shader, Texture* texture, ObjectState state, CollisionShape* collision)
+    : mShader{shader}, mTexture{texture}, mCollision{collision}
 {
+    mMatrix.setToIdentity();
     mObjectState = state;
     if(mTexture){
         //mTextureUniform = glGetUniformLocation(mShader.getProgram(), "textureSampler");
@@ -182,4 +185,19 @@ QVector3D VisualObject::GetRight(){
     rgt.setZ(mMatrix.inverted().column(2).z());
     qDebug() << "Got Right: " << rgt;
     return rgt;
+}
+
+bool VisualObject::Collide(CollisionShape* coll){
+    //Bare kolliderer hvis man har en collider
+    if(mCollision){
+        //Sjekk at det ikke er denne kollideren
+        if(mCollision != coll){
+            //Hvis collide returnerer sann, returner sann
+            if(mCollision->Collide(coll)){
+                    return true;
+            }else{
+                return false;
+            }
+        }
+    }
 }

@@ -12,10 +12,11 @@ enum ObjectState{
 class Vertex;
 class Shader;
 class Texture;
+class CollisionShape;
 class VisualObject : public QOpenGLFunctions_4_1_Core {
 public:
-   VisualObject(Shader& shader, ObjectState state);
-   VisualObject(Shader& shader, Texture* texture, ObjectState);
+   VisualObject(Shader& shader, ObjectState state, CollisionShape* collision);
+   VisualObject(Shader& shader, Texture* texture, ObjectState, CollisionShape* collision);
    ~VisualObject();
    virtual void init();
    virtual void draw();
@@ -63,7 +64,7 @@ protected:
    //Kollisjoner
    QVector3D mSize;
    //Referanse til en mCollision, som er en kollisjonshape
-   class CollisionShape* mCollision;
+   CollisionShape* mCollision;
 public:
    Shader &mShader;
    Texture* mTexture;
@@ -73,7 +74,8 @@ public:
    QVector3D GetVelocity(){return mVelocity;};
    void SetVelocity(QVector3D newVelocity){ mVelocity = newVelocity;};
    //If mVelocity->mPosistion.translate(mVelocity);
-
+   bool Collide(CollisionShape* coll);
+   std::string mName = "Object";
 
 };
 #endif // VISUALOBJECT_H

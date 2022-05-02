@@ -1,7 +1,7 @@
 #include "visualpoint.h"
 #include "vertex.h"
 
-VisualPoint::VisualPoint(const std::vector<Vertex>& v, Shader& shader) : VisualObject(shader, ObjectState::STATIC)
+VisualPoint::VisualPoint(const std::vector<Vertex>& v, Shader& shader) : VisualObject(shader, ObjectState::STATIC, nullptr)
 {
     mVertices = v;
 }

@@ -1,7 +1,7 @@
 #include "xyz.h"
 #include "vertex.h"
 
-XYZ::XYZ(Shader& shader, ObjectState state) : VisualObject(shader, state)
+XYZ::XYZ(Shader& shader, ObjectState state) : VisualObject(shader, state, nullptr)
 {
     mVertices.push_back(Vertex{0.f, 0.f, 0.f,       1.f, 0.f, 0.f,    0.f, 0.f });
     mVertices.push_back(Vertex{100.f, 0.f, 0.f,     1.f, 0.f, 0.f,    0.f, 0.f });

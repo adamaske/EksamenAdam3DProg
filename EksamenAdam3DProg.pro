@@ -8,6 +8,7 @@ TARGET      = 3D-programmering
 SOURCES += main.cpp \
     aabbcollision.cpp \
     beziercurve.cpp \
+    bomb.cpp \
     camera.cpp \
     collisionshape.cpp \
     cubecollision.cpp \
@@ -33,6 +34,7 @@ HEADERS += \
     QuadTree.h \
     aabbcollision.h \
     beziercurve.h \
+    bomb.h \
     camera.h \
     collisionshape.h \
     cubecollision.h \
