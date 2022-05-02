@@ -15,7 +15,7 @@ Terrain::Terrain(Shader& shader, Texture* texture, ObjectState state) : VisualOb
     //data contains width * height * nChannels elements
     // vertex generation
     // apply a scale+shift to the height data
-    float yScale = 64.0f / 256.0f, yShift = 32.0f;
+    float yScale = 64.0f / 256.0f, yShift = 0.0f;
     unsigned char* texel;
     unsigned char y;
     qDebug() << height;
@@ -144,7 +144,7 @@ float Terrain::GetHeight(QVector3D pos){
         float c = v3.y * bary.z();
         float height = a + b + c;
        // qDebug() << "Using top vertex:  " << height;
-        return height + 32;
+        return height + 0;
     }else{
               bary = GetBaycentric(pos, QVector3D(v1.x, v1.y, v1.z), QVector3D(v2.x, v2.y, v2.z), QVector3D(v4.x, v4.y, v4.z));
         float a = v1.y * bary.x();
@@ -152,7 +152,7 @@ float Terrain::GetHeight(QVector3D pos){
         float c = v4.y * bary.z();
         float height = a + b + c;
         //qDebug() << "Using bottom vertex: " << height;
-        return height + 32;
+        return height + 0;
     }
 
 }

@@ -26,6 +26,7 @@
 #include "bomb.h"
 #include "collisionshape.h"
 #include "spherecollision.h"
+
 RenderWindow::RenderWindow(const QSurfaceFormat &format, MainWindow *mainWindow)
     : mContext(nullptr), mInitialized(false), mMainWindow(mainWindow), mQuadTree(Point2D(50,50), Point2D(-50,50), Point2D(50,-50), Point2D(-50,-50))
 
@@ -153,17 +154,30 @@ void RenderWindow::init()
     //Oppgave 7
     //Lager kontroll punkter
     std::vector<QVector3D> bezierControls;
-    bezierControls.push_back(QVector3D(-10, 8, 0));
-    bezierControls.push_back(QVector3D(0, 8, 10));
-    bezierControls.push_back(QVector3D(10, 8, 0));
+    bezierControls.push_back(QVector3D(-20, 8, 10));
+    bezierControls.push_back(QVector3D(0, 8, 20));
+    bezierControls.push_back(QVector3D(20, 8, 10));
     //lager bezier kurven
     mBezierCurve = new BezierCurve(bezierControls, *mShaders["PlainShader"]);
     mMap.insert(std::pair<std::string, VisualObject*>{"BezierCurve", mBezierCurve});
-
     //Lager fienden som skal slippe bomber
     mBomberEnemy = new Enemy("../EksamenAdam3DProg/enemy.obj", *mShaders["PlainShader"], mTextures["hund"], ObjectState::STATIC);
     mMap.insert(std::pair<std::string, VisualObject*>{"BomberEnemy", mBomberEnemy});
 
+    //Oppgave 8
+    //Lage trofeer
+    //TrophyColor color;
+    //for(int i = 0; i < 20; i++){
+    //    //Partall blir blå, oddetall røde
+    //    if(i % 2 == 0){
+    //        color = TrophyColor::BLUE;
+    //    }else{
+    //        color = TrophyColor::RED;
+    //    }
+    //    Trophy* t;
+    //    mTrophies.push_back(t);
+    //    mMap.insert(std::pair<std::string, VisualObject*>{&"Trophy " [ mTrophies.size()] -1, t});
+    //}
     //Subdivide quadtree
     mQuadTree.subDivide(2);
     //init every object
@@ -242,10 +256,11 @@ void RenderWindow::render()
             }
             //Pluss på movement hvis den går fremover, minus hvis den går baklengs
             if(mBomberEnemy->bMovingForward){
-                mBomberEnemy->mMovementProgress += 0.005f;
+                mBomberEnemy->mMovementProgress += 0.015f;
             }else{
                 mBomberEnemy->mMovementProgress -= 0.005f;
             }
+            mBomberEnemy->mMovementProgress = std::clamp(mBomberEnemy->mMovementProgress, 0.f, 1.f);
             //Set posisjonen til fienden langs bezier kurven på t
             mBomberEnemy->SetPosition(mBezierCurve->EvaluateBezier(mBomberEnemy->mMovementProgress));
             //Hvis det er mer eller likt 2 sekunder siden forrige bombe, slepp nå
@@ -253,20 +268,25 @@ void RenderWindow::render()
                 mLastBombTime = QTime::currentTime();
             }
             if(QTime::currentTime().msec() - 2 >= mLastBombTime.msec()){
+                qDebug() << "Time to spawn bomb";
                 mLastBombTime = QTime::currentTime();
                 //lager en ny bombe
                 mBombs.push_back(new Bomb("../EksamenAdam3DProg/enemy.obj", *mShaders["PlainShader"], mTextures["hund"], ObjectState::STATIC,
                         new SphereCollision(QVector3D( 0,0,0), 1, nullptr)));
+                mBombs[mBombs.size() -1 ]->init();
+                qDebug() << "Spawned bomb";
                 //Setter inn i map
-                mMap.insert(std::pair<std::string, VisualObject*>{"Bomb " + mBombs.size(), mBombs[mBombs.size()-1]});
+                mMap.insert(std::pair<std::string, VisualObject*>{&"Bomb " [ mBombs.size()], mBombs[mBombs.size()-1]});
+                qDebug() << "Added bomb to map";
                 //Setter posisjonen til den til bomberen
                 mBombs[mBombs.size()-1]->SetPosition(mBomberEnemy->GetPosition());
+                qDebug() << "Amount of bombs: " << mBombs.size();
 
             }
             //Send bombene need til terrenget
             for(int i = 0; i < mBombs.size(); i++){
                 //Oppdater senter til bombene kolliderene
-                if(mBombs[i]->GetPosition().y() < mTerrain->GetHeight(mBombs[i]->GetPosition())){
+                if(mBombs[i]->GetPosition().y() > mTerrain->GetHeight(mBombs[i]->GetPosition())){
                     float y = mBombs[i]->GetPosition().y();
                     y -= 0.07;
                     //Setter ny y verdi
@@ -517,7 +537,7 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
         break;
         case GameState::Play :
         //Roter hunden til venstre
-            mMap["Player"]->RotateRight(1);
+            mMap["Player"]->RotateRight(4);
         break;
         }
     }
@@ -530,7 +550,7 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
         break;
         case GameState::Play :
         //Roter hunden til høyre
-            mMap["Player"]->RotateRight(-1);
+            mMap["Player"]->RotateRight(-4);
         break;
         }
     }

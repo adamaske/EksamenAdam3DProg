@@ -7,6 +7,7 @@ class ObjMesh : public VisualObject
 public:
     ObjMesh(std::string fileName, Shader& shader, ObjectState state);
     ObjMesh(std::string fileName, Shader& shader, Texture* texture, ObjectState state);
+    ObjMesh(std::string fileName, Shader& shader, Texture* texture, ObjectState state, CollisionShape* coll);
     virtual void draw() override;
     virtual void init() override;
     virtual void Update() override;

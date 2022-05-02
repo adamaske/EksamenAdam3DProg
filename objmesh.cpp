@@ -20,6 +20,13 @@ ObjMesh::ObjMesh(std::string fileName, Shader& shader, Texture* texture, ObjectS
     readFile(fileName);
     mMatrix.setToIdentity();
 }
+ObjMesh::ObjMesh(std::string fileName, Shader& shader, Texture* texture, ObjectState state, CollisionShape* coll) : VisualObject(shader, texture, state, coll)
+{
+    mTexture = texture;
+
+    readFile(fileName);
+    mMatrix.setToIdentity();
+}
 void ObjMesh::init(){
     initializeOpenGLFunctions();
     //Get the model matrix from shader

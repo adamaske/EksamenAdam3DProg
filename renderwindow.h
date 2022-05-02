@@ -21,6 +21,7 @@ class Enemy;
 class XYZ;
 class BezierCurve;
 class Bomb;
+class Trophy;
 
 enum GameState{Editor, Play};
 /// This inherits from QWindow to get access to the Qt functionality and
@@ -66,6 +67,8 @@ private:
     XYZ* mXYZ;
     //Enum til holde editor og play modus
     GameState mGameState = GameState::Play;
+    //Trofeer
+    std::vector<Trophy*> mTrophies;
 
     std::pair<float, float> mMouseMovement{0, 0};
     std::pair<float, float> mMouseMovementDelta{0, 0};
@@ -73,7 +76,7 @@ private:
 
     QOpenGLContext *mContext{nullptr};  //Our OpenGL context
     bool mInitialized{false};
-    int mPointLights = 0;
+
     std::unordered_map<std::string, Shader*> mShaders;
     std::unordered_map<std::string, Texture*> mTextures;
     Shader *mShaderProgram{nullptr};    //holds pointer the GLSL shader program

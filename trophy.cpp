@@ -3,7 +3,7 @@
 #include "vector3d.h"
 #include "vertex.h"
 #include "texture.h"
-Trophy::Trophy(std::string fileName, Shader& shader, Texture* texture, ObjectState state) : ObjMesh(fileName ,shader, texture, state)
+Trophy::Trophy(std::string fileName, Shader& shader, Texture* texture, ObjectState state, CollisionShape* coll, TrophyColor color) : ObjMesh(fileName ,shader, texture, state, coll)
 {
     //readFile(fileName);
     mMatrix.setToIdentity();
@@ -67,6 +67,12 @@ void Trophy::draw(){
     glBindVertexArray(0);
 }
 
-void Trophy::PickupTrophy(){
-    bDraw = false;
+bool Trophy::PickupTrophy(){
+    if(bDraw){
+        bDraw = false;
+        mObjectState = ObjectState::STATIC;
+        return true;
+    }else{
+        return false;
+    }
 }
