@@ -55,26 +55,11 @@ void Camera::RotateRight(float amount)
     mVmatrix->rotate(amount, QVector3D(0, 1,0));
 }
 
-void Camera::RotateYaw(float amount)
-{
-    mVmatrix->rotate(amount, QVector3D(0, 1,0));
-}
-
-void Camera::RotatePitch(float amount)
-{
-    mVmatrix->rotate(amount, QVector3D(0, 0,1));
-}
-
 void Camera::SetPosition(QVector3D pos)
 {
     mVmatrix->setToIdentity();
     mEye = pos;
     mVmatrix->translate(pos);
-}
-
-void Camera::UpdateRotation()
-{
-
 }
 
 QVector3D Camera::GetPosition(){

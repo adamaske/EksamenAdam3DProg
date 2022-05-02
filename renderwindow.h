@@ -7,6 +7,7 @@
 #include <QElapsedTimer>
 #include <unordered_map>
 #include "QuadTree.h"
+#include <QTime>
 class QOpenGLContext;
 class Shader;
 class MainWindow;
@@ -18,6 +19,8 @@ class Texture;
 class VisualSun;
 class Enemy;
 class XYZ;
+class BezierCurve;
+
 
 enum GameState{Editor, Play};
 /// This inherits from QWindow to get access to the Qt functionality and
@@ -55,6 +58,9 @@ private:
     VisualSun* mSun;
     //Bomber man
     Enemy* mBomberEnemy;
+    QTime mLastBombTime = QTime::currentTime();
+    //std::vector<Bomb*> mBombs;
+    BezierCurve* mBezierCurve;
     //Aksene
     XYZ* mXYZ;
     //Enum til holde editor og play modus

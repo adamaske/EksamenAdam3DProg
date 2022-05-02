@@ -22,6 +22,7 @@
 #include "enemy.h"
 #include "visualsun.h"
 #include "xyz.h"
+#include "beziercurve.h"
 RenderWindow::RenderWindow(const QSurfaceFormat &format, MainWindow *mainWindow)
     : mContext(nullptr), mInitialized(false), mMainWindow(mainWindow), mQuadTree(Point2D(50,50), Point2D(-50,50), Point2D(50,-50), Point2D(-50,-50))
 
@@ -134,7 +135,7 @@ void RenderWindow::init()
     //Lager player fra object.obj, gir phongshader og hund tekstur
     mMap.insert(std::pair<std::string, VisualObject*>{"Player",
                 new ObjMesh("../EksamenAdam3DProg/object.obj", *mShaders["LightShader"], mTextures["Hund"], ObjectState::DYNAMIC)});
-   mMap["Player"]->RotateRight(-90);
+    mMap["Player"]->RotateRight(-90);
     mMap["Player"]->SetPosition(QVector3D(0, 0, 0));
 
     //Oppgave 5
@@ -146,7 +147,19 @@ void RenderWindow::init()
     //Lager aksen som vises i editor modus
     mXYZ = new XYZ(*mShaders["PlainShader"], ObjectState::STATIC);
     mXYZ->init();
+    //Oppgave 7
+    //Lager kontroll punkter
+    std::vector<QVector3D> bezierControls;
+    bezierControls.push_back(QVector3D(-10, 8, 0));
+    bezierControls.push_back(QVector3D(0, 8, 10));
+    bezierControls.push_back(QVector3D(10, 8, 0));
 
+    //lager bezier kurven
+    mBezierCurve = new BezierCurve(bezierControls, *mShaders["PlainShader"]);
+    mMap.insert(std::pair<std::string, VisualObject*>{"BezierCurve", mBezierCurve});
+    //Lager fienden som skal slippe bomber
+    mBomberEnemy = new Enemy("../EksamenAdam3DProg/enemy.obj", *mShaders["PlainShader"], mTextures["hund"], ObjectState::STATIC);
+    mMap.insert(std::pair<std::string, VisualObject*>{"BomberEnemy", mBomberEnemy});
     //Subdivide quadtree
     mQuadTree.subDivide(2);
     //init every object
@@ -185,37 +198,70 @@ void RenderWindow::render()
         if(mMouseMovementDelta.first != 0){
             mEditorCamera->RotateRight(mMouseMovementDelta.first * 0.1f);
         }
-        if(mMouseMovementDelta.second != 0){
-            mEditorCamera->RotatePitch(mMouseMovementDelta.second * 0.01f);
-        }
     break;
         //Sett kamera bak spilleren
     case GameState::Play :
         mPlayCamera->init();
         // verticalAngle, aspectRatio, nearPlane,farPlane
         mPlayCamera->perspective(90, static_cast<float>(width()) / static_cast<float>(height()), 0.1, 3000.0);
+
+        //
         QVector3D PlayerPos = mMap["Player"]->GetPosition();
         //Set y to GetHeight from terrain
         mMap["Player"]->SetPosition(QVector3D(PlayerPos.x(), mTerrain->GetHeight(PlayerPos), PlayerPos.z()));
-        PlayerPos = mMap["Player"]->GetPosition();
-        mPlayCamera->lookAt(PlayerPos + QVector3D(0,5, -5), PlayerPos, QVector3D{ 0,1,0 });
+        //Setter kamera bak og over spilleren
+        mPlayCamera->lookAt(mMap["Player"]->GetPosition() + QVector3D(0,5, -5), mMap["Player"]->GetPosition(), QVector3D{ 0,1,0 });
+
+        //Oppgave 3
+        //Adder vinkelen den er på
+        mSun->angle += 0.01f;
+        //Hent posisjonen
+        QVector3D sunPos = mSun->GetPosition();
+        //Cosinus vinkelen ganger radius for x
+        sunPos.setX((cos(mSun->angle)*20));
+        //Set til 20 meter over bakken
+        sunPos.setY(20);
+        //Sinus vinkelen ganger radius for z
+        sunPos.setZ((sin(mSun->angle)*20));
+        //Sett nye posisjonen
+        mSun->SetPosition(sunPos);
+
+        //Oppgave 7
+        //Beveg bomberen lags bezier kruve
+        //Hvis fienden har beveged seg helt til 1, beveg baklengs
+        if(mBomberEnemy->mMovementProgress >= 1){
+            mBomberEnemy->bMovingForward = false;
+        }else if(mBomberEnemy->mMovementProgress <= 0){
+            //Hvis den er negativ, beveg den forover igjen
+            mBomberEnemy->bMovingForward = true;
+        }
+        //Pluss på movement hvis den går fremover, minus hvis den går baklengs
+        if(mBomberEnemy->bMovingForward){
+            mBomberEnemy->mMovementProgress += 0.005f;
+        }else{
+            mBomberEnemy->mMovementProgress -= 0.005f;
+        }
+        //Set posisjonen til fienden langs bezier kurven på t
+        mBomberEnemy->SetPosition(mBezierCurve->EvaluateBezier(mBomberEnemy->mMovementProgress));
+        //Hvis det er mer eller likt 2 sekunder siden forrige bombe, slepp nå
+        if(QTime::currentTime().msec() - 2 >= mLastBombTime.msec()){
+            mLastBombTime = QTime::currentTime();
+            //mMap.insert(std::pari<std::string, VisualObject*>{"Bomb " + mBombs.size(), new Bomb("../EksamenAdam3DProg/enemy.obj", *mShaders["PlainShader"], mTextures["hund"], ObjectState::STATIC)});
+            //mBombs[mBombs.size()-1]->SetPosition(mBomberEnemy->GetPosistion);
+
+        }
+        //Send bombene need til terrenget
+        //for(int i = 0; i < mBombs.size(); i++){
+        //    if(mBombs[i]->GetPosistion().y() < mTerrain->GetHeight(mBombs[i]->GetPosistion())){
+        //        float y = mBombs[i]->GetPosistion().y());
+        //        y -= 0.07;
+        //        mBombs[i]->SetPosition(mBombs[i]->GetPosistion().x()), y, mBombs[i]->GetPosistion().z())
+        //    }
+        //}
         break;
     }
 
 
-    //Oppgave 3
-    //Adder vinkelen den er på
-    mSun->angle += 0.01f;
-    //Hent posisjonen
-    QVector3D sunPos = mSun->GetPosition();
-    //Cosinus vinkelen ganger radius for x
-    sunPos.setX((cos(mSun->angle)*20));
-    //Set til 20 meter over bakken
-    sunPos.setY(20);
-    //Sinus vinkelen ganger radius for z
-    sunPos.setZ((sin(mSun->angle)*20));
-    //Sett nye posisjonen
-    mSun->SetPosition(sunPos);
 
     //Apply camera to all shaders
     for(auto it = mShaders.begin(); it != mShaders.end(); it++){
@@ -400,9 +446,6 @@ void RenderWindow::mouseMoveEvent(QMouseEvent *event)
         //mPlayCamera->RotateRight(mMouseMovement.first * 1.f);
         if(mMouseMovementDelta.first != 0){
             mEditorCamera->RotateRight(mMouseMovementDelta.first);
-        }
-        if(mMouseMovementDelta.second != 0){
-            mEditorCamera->RotatePitch(mMouseMovementDelta.second);
         }
 
         mMouseMovement.first = event->pos().x();

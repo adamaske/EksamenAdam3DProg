@@ -7,6 +7,7 @@ TARGET      = 3D-programmering
 
 SOURCES += main.cpp \
     aabbcollision.cpp \
+    beziercurve.cpp \
     camera.cpp \
     collisionshape.cpp \
     cubecollision.cpp \
@@ -24,12 +25,14 @@ SOURCES += main.cpp \
     vector3d.cpp \
     vertex.cpp \
     visualobject.cpp \
+    visualpoint.cpp \
     visualsun.cpp \
     xyz.cpp
 
 HEADERS += \
     QuadTree.h \
     aabbcollision.h \
+    beziercurve.h \
     camera.h \
     collisionshape.h \
     cubecollision.h \
@@ -48,6 +51,7 @@ HEADERS += \
     vector3d.h \
     vertex.h \
     visualobject.h \
+    visualpoint.h \
     visualsun.h \
     xyz.h
 
