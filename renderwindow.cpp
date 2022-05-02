@@ -104,15 +104,15 @@ void RenderWindow::init()
     //    glEnable(GL_CULL_FACE);       //draws only front side of models - usually what you want - test it out!
     glClearColor(0.4f, 0.4f, 0.4f, 1.0f);    //gray color used in glClear GL_COLOR_BUFFER_BIT
 
-
-    mShaders.insert(std::pair<std::string, Shader*>{"PlainShader", new Shader("../3Dprog22/plainshader.vert",
-                                                                                 "../3Dprog22/plainshader.frag")});
-    mShaders.insert(std::pair<std::string, Shader*>{"TextureShader", new Shader("../3Dprog22/textureshader.vert",
-                                                                                "../3Dprog22/textureshader.frag")});
-    mShaders.insert(std::pair<std::string, Shader*>{"LightShader", new Shader("../3Dprog22/lightshader.vert",
-                                                                                "../3Dprog22/lightshader.frag")});
-    mShaders.insert(std::pair<std::string, Shader*>{"HeightShader", new Shader("../3Dprog22/heightshader.vert",
-                                                                                "../3Dprog22/heightshader.frag")});
+    //Creating shaders
+    mShaders.insert(std::pair<std::string, Shader*>{"PlainShader", new Shader("../EksamenAdam3DProg/plainshader.vert",
+                                                                                 "../EksamenAdam3DProg/plainshader.frag")});
+    mShaders.insert(std::pair<std::string, Shader*>{"TextureShader", new Shader("../EksamenAdam3DProg/textureshader.vert",
+                                                                                "../EksamenAdam3DProg/textureshader.frag")});
+    mShaders.insert(std::pair<std::string, Shader*>{"LightShader", new Shader("../EksamenAdam3DProg/lightshader.vert",
+                                                                                "../EksamenAdam3DProg/lightshader.frag")});
+    mShaders.insert(std::pair<std::string, Shader*>{"HeightShader", new Shader("../EksamenAdam3DProg/heightshader.vert",
+                                                                                "../EksamenAdam3DProg/heightshader.frag")});
     //Set the material properties of the lightshader
     mShaders["LightShader"]->use();
     mShaders["LightShader"]->SetUniform1i(0, "material.diffuse");
@@ -128,12 +128,15 @@ void RenderWindow::init()
     mCamera = new Camera();
     //creating objects to be drawn
     mMap.insert(std::pair<std::string, VisualObject*>{"Plane",
-                new ObjMesh("../3Dprog22/plane.obj", *mShaders["LightShader"], new Texture("../3Dprog22/hammer.bmp"))});
+                new ObjMesh("../EksamenAdam3DProg/plane.obj", *mShaders["LightShader"], new Texture("../EksamenAdam3DProg/hammer.bmp"))});
     mMap.insert(std::pair<std::string, VisualObject*>{"Cube",
                 new Cube(*mShaders["PlainShader"])});
     mMap.insert(std::pair<std::string, VisualObject*>{"Dog",
-                new ObjMesh("../3Dprog22/object.obj", *mShaders["LightShader"], new Texture("../3Dprog22/hund.bmp"))});
-    mTerrain = new Terrain(*mShaders["LightShader"]);
+                new ObjMesh("../EksamenAdam3DProg/object.obj", *mShaders["LightShader"], new Texture("../EksamenAdam3DProg/hund.bmp"))});
+
+    //Oppgave 2
+    //Init terrenget med phongshaderen og GrassTekstur
+    mTerrain = new Terrain(*mShaders["LightShader"], new Texture("../EksamenAdam3DProg/GrassTekstur.bmp"));
     mMap.insert(std::pair<std::string, VisualObject*>{"Terrain", mTerrain});
     //mMap["Terrain"]->SetPosition(QVector3D(0, -11, 0));
 
@@ -156,13 +159,13 @@ void RenderWindow::init()
     //Trophies
     for(int i = 0; i < 10; i++){
         //Creat trophies
-        mMap.insert(std::pair<std::string, VisualObject*>{"Trophy " + std::to_string(i), new Trophy("../3Dprog22/trophy.obj", *mShaders["LightShader"], new Texture())});
+        mMap.insert(std::pair<std::string, VisualObject*>{"Trophy " + std::to_string(i), new Trophy("../EksamenAdam3DProg/trophy.obj", *mShaders["LightShader"], new Texture())});
         mMap["Trophy " + std::to_string(i)]->SetPosition(QVector3D(-20 + rand() % 40, 0, -20 + rand() % 40));
     }
     //Enemies
     for(int i = 0; i < 10; i++){
         //Creat trophies
-        mMap.insert(std::pair<std::string, VisualObject*>{"Enemy " + std::to_string(i), new Enemy("../3Dprog22/enemy.obj", *mShaders["LightShader"], new Texture())});
+        mMap.insert(std::pair<std::string, VisualObject*>{"Enemy " + std::to_string(i), new Enemy("../EksamenAdam3DProg/enemy.obj", *mShaders["LightShader"], new Texture())});
         mMap["Enemy " + std::to_string(i)]->SetPosition(QVector3D(-100 + rand() % 200, 0, -100 + rand() % 200));
     }
     //Subdivide quadtree

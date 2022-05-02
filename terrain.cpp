@@ -4,11 +4,11 @@
 #include "shader.h"
 #include "vertex.h"
 #include "texture.h"
-Terrain::Terrain(Shader& shader) : VisualObject(shader)
+Terrain::Terrain(Shader& shader, Texture* texture) : VisualObject(shader)
 {
 
     //Array of pixel data, load function sets the width, height and channels read from the image
-    unsigned char *data = stbi_load("../3Dprog22/iceland_heightmap.png",
+    unsigned char *data = stbi_load("../EksamenAdam3DProg/EksamenHeightmap.jpg",
                                     &width, &height, &nChannels,
                                     0);
     //Taken from https://learnopengl.com/Guest-Articles/2021/Tessellation/Height-map
@@ -59,6 +59,7 @@ Terrain::Terrain(Shader& shader) : VisualObject(shader)
     }
     NUM_STRIPS = height-1;
     NUM_VERTS_PER_STRIP = width*2;
+    mTexture = texture;
     mMatrix.setToIdentity();
 }
 
@@ -94,6 +95,12 @@ void Terrain::init(){
     glBindVertexArray(0);
 }
 void Terrain::draw(){
+    //Bruk tekstur hvis det ikke er nullptr
+    if(mTexture){
+       glActiveTexture(GL_TEXTURE0);
+       glBindTexture(GL_TEXTURE_2D, mTexture->id());
+       glUniform1i(mTextureUniform, 0);
+    }
     //use my shader
     glUseProgram(mShader.getProgram());
     //Send my model matrix
