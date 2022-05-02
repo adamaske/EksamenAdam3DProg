@@ -21,6 +21,14 @@ public:
     void MoveForward(float amount);
     void MoveRight(float amount);
     void RotateRight(float amount);
+    void RotateYaw(float amount);
+    void RotatePitch(float amount);
+    void SetPosition(QVector3D pos);
+    void UpdateRotation();
+
+    QMatrix4x4 mYaw;
+    QMatrix4x4 mPitch;
+
     QVector3D GetPosition();
 };
 

@@ -157,8 +157,11 @@ void RenderWindow::init()
         (*it).second->UpdateTransform();
     }
     mEditorCamera->init();
+    mEditorCamera->SetPosition(QVector3D(0, 5,0));
     glBindVertexArray(0);       //unbinds any VertexArray - good practice
 }
+
+
 
 // Called each frame - doing the rendering!!!
 void RenderWindow::render()
@@ -175,21 +178,28 @@ void RenderWindow::render()
     switch(mGameState){
     //
     case GameState::Editor :
-
+        mEditorCamera->init();
         mEditorCamera->perspective(90, static_cast<float>(width()) / static_cast<float>(height()), 0.1, 3000.0);
         //Yaw til kamera med mus input her
-
+        mEditorCamera->SetPosition(QVector3D(0.0f, 10.f, 0.0f));
+        if(mMouseMovementDelta.first != 0){
+            mEditorCamera->RotateRight(mMouseMovementDelta.first * 0.1f);
+        }
+        if(mMouseMovementDelta.second != 0){
+            mEditorCamera->RotatePitch(mMouseMovementDelta.second * 0.01f);
+        }
     break;
         //Sett kamera bak spilleren
     case GameState::Play :
         mPlayCamera->init();
-        mPlayCamera->perspective(90, static_cast<float>(width()) / static_cast<float>(height()), 0.1, 3000.0); // verticalAngle, aspectRatio, nearPlane,farPlane
+        // verticalAngle, aspectRatio, nearPlane,farPlane
+        mPlayCamera->perspective(90, static_cast<float>(width()) / static_cast<float>(height()), 0.1, 3000.0);
         QVector3D PlayerPos = mMap["Player"]->GetPosition();
         //Set y to GetHeight from terrain
         mMap["Player"]->SetPosition(QVector3D(PlayerPos.x(), mTerrain->GetHeight(PlayerPos), PlayerPos.z()));
         PlayerPos = mMap["Player"]->GetPosition();
         mPlayCamera->lookAt(PlayerPos + QVector3D(0,5, -5), PlayerPos, QVector3D{ 0,1,0 });
-    break;
+        break;
     }
 
 
@@ -223,7 +233,6 @@ void RenderWindow::render()
                 //Give all lights the camera position
                 (*it).second->SetUniform3f(mEditorCamera->GetPosition().x(), mEditorCamera->GetPosition().y(), mEditorCamera->GetPosition().y(),
                                            "cameraPosition");
-
             }
         break;
             //Bruk play kameraet
@@ -240,9 +249,11 @@ void RenderWindow::render()
             }
         break;
         }
+        if((*it).first == "LightShader"){
         //Set light posistion
         (*it).second->SetUniform3f(mMap["Sun"]->GetPosition().x(), mMap["Sun"]->GetPosition().y(), mMap["Sun"]->GetPosition().z(),
                                     "lightPosition");
+        }
     }
 
     //Draw all objects
@@ -380,7 +391,27 @@ void RenderWindow::startOpenGLDebugger()
         }
     }
 }
+void RenderWindow::mouseMoveEvent(QMouseEvent *event)
+{
+    if(mGameState == GameState::Editor){
+        mMouseMovementDelta.first += event->pos().x() - mMouseMovement.first;
+        mMouseMovementDelta.second += event->pos().x() - mMouseMovement.second;
 
+        //mPlayCamera->RotateRight(mMouseMovement.first * 1.f);
+        if(mMouseMovementDelta.first != 0){
+            mEditorCamera->RotateRight(mMouseMovementDelta.first);
+        }
+        if(mMouseMovementDelta.second != 0){
+            mEditorCamera->RotatePitch(mMouseMovementDelta.second);
+        }
+
+        mMouseMovement.first = event->pos().x();
+
+        mMouseMovement.second = event->pos().y();
+    }
+
+
+}
 //Event sent from Qt when program receives a keyPress
 // NB - see renderwindow.h for signatures on keyRelease and mouse input
 void RenderWindow::keyPressEvent(QKeyEvent *event)

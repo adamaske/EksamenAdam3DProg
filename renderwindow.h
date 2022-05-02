@@ -60,6 +60,9 @@ private:
     //Enum til holde editor og play modus
     GameState mGameState = GameState::Play;
 
+    std::pair<float, float> mMouseMovement{0, 0};
+    std::pair<float, float> mMouseMovementDelta{0, 0};
+    void mouseMoveEvent(QMouseEvent *event) override;
 
     QOpenGLContext *mContext{nullptr};  //Our OpenGL context
     bool mInitialized{false};
