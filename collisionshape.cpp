@@ -52,7 +52,18 @@ bool CollisionShape::CheckCollision(CollisionShape* col1, CollisionShape* col2){
 bool CollisionShape::Collide(CollisionShape *col){
     if(col){
         if(mCollisionMode == CollisionShapeMode::SPHERE){
+            if(col->mCollisionMode == CollisionShapeMode::SPHERE){
+                //Sphere to sphere collision
 
+                QVector3D difference = GetCenter() - col->GetCenter();
+                float length = difference.length();
+
+                if(length < GetRadius()+col->GetRadius()){
+                    return true;
+                }else{
+                    return false;
+                }
+            }
         }
 
         if(mCollisionMode == CollisionShapeMode::AABB){

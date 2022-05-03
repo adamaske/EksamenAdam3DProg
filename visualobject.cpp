@@ -61,13 +61,13 @@ void VisualObject::move(float dx, float dy, float dz){
 
 void VisualObject::MoveForward(float amount){
     //Z is forward in the world
-    qDebug() << "Moved forward: " << (amount * GetForward());
     mPosition.translate(amount * GetForward());
     UpdateTransform();
 }
 void VisualObject::MoveRight(float amount){
     //X is right in the world
     mPosition.translate(amount * GetRight());
+    UpdateTransform();
 }
 void VisualObject::rotate(float dx, float dy, float dz)
 {
@@ -161,6 +161,13 @@ QVector3D VisualObject::GetRight(){
     rgt.setZ(mMatrix.inverted().column(2).z());
     qDebug() << "Got Right: " << rgt;
     return rgt;
+}
+
+void VisualObject::SetCollisionShape(CollisionShape *coll)
+{
+    mCollision = coll;
+    coll->SetRadius(2);
+    coll->SetCenter(GetPosition());
 }
 
 bool VisualObject::Collide(CollisionShape* coll){

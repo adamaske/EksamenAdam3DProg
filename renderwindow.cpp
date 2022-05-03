@@ -131,18 +131,19 @@ void RenderWindow::init()
     //Init terrenget med phongshaderen og GrassTekstur
     mTerrain = new Terrain(*mShaders["LightShader"], mTextures["Grass"], ObjectState::STATIC);
     mMap.insert(std::pair<std::string, VisualObject*>{"Terrain", mTerrain});
-
+    mTerrain->SetName("Terrain");
     //Oppgave 3
     mSun = new VisualSun("../EksamenAdam3DProg/Sun.obj", *mShaders["PlainShader"], ObjectState::STATIC);
     mMap.insert(std::pair<std::string, VisualObject*>{"Sun", mSun});
-
+    mSun->SetName("Sun");
     //Oppgave 4
     //Lager player fra object.obj, gir phongshader og hund tekstur
     mMap.insert(std::pair<std::string, VisualObject*>{"Player",
                 new ObjMesh("../EksamenAdam3DProg/object.obj", *mShaders["LightShader"], mTextures["Hund"], ObjectState::DYNAMIC)});
     mMap["Player"]->RotateRight(-90);
     mMap["Player"]->SetPosition(QVector3D(0, 0, 0));
-
+    mMap["Player"]->SetName("Player");
+    mMap["Player"]->SetCollisionShape(new SphereCollision(mMap["Player"]->GetPosition(), 2, mMap["Player"]));
     //Oppgave 5
     //lager kameraer
     mPlayCamera = new Camera();
@@ -312,6 +313,8 @@ void RenderWindow::render()
                 //Setter posisjonen til den til bomberen
                 mBombs[mBombs.size()-1]->SetPosition(mBomberEnemy->GetPosition());
                 qDebug() << "Amount of bombs: " << mBombs.size();
+                //Inserter in i quadtreeet
+                mQuadTree.insert(mBombs[mBombs.size()-1]->getPosition2D(), &"Bomb " [ mBombs.size()]-1, mBombs[mBombs.size()-1]);
 
             }
             //Send bombene need til terrenget
@@ -323,36 +326,32 @@ void RenderWindow::render()
                     //Setter ny y verdi
                     mBombs[i]->SetPosition(QVector3D(mBombs[i]->GetPosition().x(), y, mBombs[i]->GetPosition().z()));
                 }
+            }            
+        }
+
+        //Oppgave 8 og 9
+        //Sjekk for kollisjoner med trofeer og bomber
+        //Finn objektene i nærheten av spilleren
+        QuadTree<std::string, VisualObject*>* quad = mQuadTree.find(mMap["Player"]->getPosition2D());
+        //std::vector<VisualObject*> objects;
+        //Iterer gjennom alle objektene i quaden
+        for(auto i = quad->begin(); i != quad->end(); i++){
+            if(mMap["Player"]->Collide((*i)->GetCollisionShape())){
+                qDebug() << "Player collided with something";
+            }
+            //Bare sjekk kollisjoner på vegne av de dynamiske objektene
+            if((*i)->mObjectState == ObjectState::DYNAMIC){
+                for(auto j = quad->begin(); j != quad->end(); j++){
+                    //Ikke kollider med seg selv
+                    if(i != j){
+                        if((*i)->Collide((*j)->GetCollisionShape())){
+                            qDebug() << (*i)->GetName().c_str() << " collided with " << (*j)->GetName().c_str();
+                        }
+                    }
+                }
             }
 
-            //Oppgave 8 og 9
-            //Sjekk for kollisjoner med trofeer og bomber
-            //Finn objektene i nærheten av spilleren
-//           QuadTree<std::string, VisualObject*>* quad = mQuadTree.find(mMap["Player"]->getPosition2D());
-//           std::vector<VisualObject*> objects;
-//           if(quad){
-//               //Kollisjonformene blir oppdatert i VisualObject::UpdateTransform
-//               //Auto blir en vector itterator<VisualObject*>
-//               for(auto it = quad->begin(); it != quad->end(); it++){
-//                   objects.push_back(*it);
-//                   if(*it == mMap["Player"]){
-//                       for(auto ti = quad->begin(); ti != quad->end(); ti++){
-//                           //Sjekk spiller mot andre objekter
-//                           if((*ti)->GetName() == "Bomb"){
-//                               //Frys spiller
-//                           }
-//                       }
-//                   }else if(*it == mMap["CollectorEnemy"]){
-//                       for(auto ti = quad->begin(); ti != quad->end(); ti++){
-//                           //Sjekk spiller mot andre objekter
-//                           if((*ti)->GetName() == "Bomb"){
-//                               //Frys collectorEnemy
-//                           }
-//                       }
-//                   }
-//               }
-//           }
-       }
+        }
         break;
     }
 
