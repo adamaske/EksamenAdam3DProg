@@ -9,12 +9,12 @@ uniform sampler2D textureSampler;
 
 uniform vec3 cameraPosition;
 
-uniform float ambientStrength = 0.1;
+uniform float ambientStrength = 0.2;
 
 uniform vec3 lightPosition;
-uniform vec3 lightColor = vec3(1, 1, 1);  //blueish
+uniform vec3 lightColor = vec3(1, 1, 1);
 uniform float lightStrength = 1;
-uniform float specularStrength = 0.9;
+uniform float specularStrength = 0.1;
 uniform int specularExponent = 32;
 
 uniform vec3 objectColor = vec3(1.0, 1.0, 1.0); //white
@@ -27,7 +27,7 @@ void main() {
     //diffuse
     vec3 normalCorrected = normalize(normalTransposed);
     vec3 lightDirection = normalize(lightPosition - fragmentPosition);
-    float angleFactor = max(dot(normalCorrected, lightDirection), 0.0);
+    float angleFactor = max(dot(normalCorrected, lightDirection), 0.3);
     vec3 diffuse = angleFactor * objectColor * lightColor * lightStrength;
 
     //specular

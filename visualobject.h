@@ -74,7 +74,8 @@ public:
    QVector3D GetVelocity(){return mVelocity;};
    void SetVelocity(QVector3D newVelocity){ mVelocity = newVelocity;};
    //If mVelocity->mPosistion.translate(mVelocity);
-   bool Collide(CollisionShape* coll);
+   virtual bool Collide(CollisionShape* coll);
+   CollisionShape* GetCollisionShape(){return mCollision;};
    std::string mName = "Object";
 
 };

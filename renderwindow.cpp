@@ -125,7 +125,8 @@ void RenderWindow::init()
     mTextures.insert(std::pair<std::string, Texture*>{"Hund", new Texture("../EksamenAdam3DProg/hund.bmp")});
     mTextures.insert(std::pair<std::string, Texture*>{"Hammer", new Texture("../EksamenAdam3DProg/hammer.bmp")});
     mTextures.insert(std::pair<std::string, Texture*>{"Grass", new Texture("../EksamenAdam3DProg/GrassTekstur.bmp")});
-
+    mTextures.insert(std::pair<std::string, Texture*>{"Blue", new Texture("../EksamenAdam3DProg/BlueTekstur.bmp")});
+    mTextures.insert(std::pair<std::string, Texture*>{"Red", new Texture("../EksamenAdam3DProg/RedTekstur.bmp")});
     //Oppgave 2
     //Init terrenget med phongshaderen og GrassTekstur
     mTerrain = new Terrain(*mShaders["LightShader"], mTextures["Grass"], ObjectState::STATIC);
@@ -154,9 +155,9 @@ void RenderWindow::init()
     //Oppgave 7
     //Lager kontroll punkter
     std::vector<QVector3D> bezierControls;
-    bezierControls.push_back(QVector3D(-20, 8, 10));
-    bezierControls.push_back(QVector3D(0, 8, 20));
-    bezierControls.push_back(QVector3D(20, 8, 10));
+    bezierControls.push_back(QVector3D(-40, 8, 40));
+    bezierControls.push_back(QVector3D(0, 8, 10));
+    bezierControls.push_back(QVector3D(20, 8, 20));
     //lager bezier kurven
     mBezierCurve = new BezierCurve(bezierControls, *mShaders["PlainShader"]);
     mMap.insert(std::pair<std::string, VisualObject*>{"BezierCurve", mBezierCurve});
@@ -166,18 +167,31 @@ void RenderWindow::init()
 
     //Oppgave 8
     //Lage trofeer
-    //TrophyColor color;
-    //for(int i = 0; i < 20; i++){
-    //    //Partall blir blå, oddetall røde
-    //    if(i % 2 == 0){
-    //        color = TrophyColor::BLUE;
-    //    }else{
-    //        color = TrophyColor::RED;
-    //    }
-    //    Trophy* t;
-    //    mTrophies.push_back(t);
-    //    mMap.insert(std::pair<std::string, VisualObject*>{&"Trophy " [ mTrophies.size()] -1, t});
-    //}
+    TrophyColor color;
+    Texture* mTex;
+    for(int i = 0; i < 20; i++){
+        //Partall blir blå, oddetall røde
+        if(i % 2 == 0){
+            color = TrophyColor::BLUE;
+            mTex = mTextures["Blue"];
+        }else{
+            color = TrophyColor::RED;
+            mTex = mTextures["Red"];
+        }
+        Trophy* t = new Trophy("../EksamenAdam3DProg/trophy.obj", *mShaders["LightShader"], mTex,
+                ObjectState::STATIC, new SphereCollision(QVector3D(0,0,0), 2, nullptr), color);
+        mTrophies.push_back(t);
+        mMap.insert(std::pair<std::string, VisualObject*>{&"Trophy " [ mTrophies.size()] - 1, t});
+        //Setter tilfedlig sted mellom -30 og 30 x og -10 og 10 z
+        t->SetPosition(QVector3D( -45 + rand() % 90, 0, -20 + rand() % 40));
+        //Setter på terrenget
+        t->SetPosition(QVector3D(t->GetPosition().x(), mTerrain->GetHeight(t->GetPosition()), t->GetPosition().z()));
+
+    }
+
+    //Oppgave 9
+    Enemy* e = new Enemy("../EksamenAdam3DProg/enemy.obj", *mShaders["LightShader"], new Texture(), ObjectState::DYNAMIC);
+    mMap.insert(std::pair<std::string, VisualObject*>{"CollectorEnemy", e});
     //Subdivide quadtree
     mQuadTree.subDivide(2);
     //init every object
@@ -291,6 +305,24 @@ void RenderWindow::render()
                     y -= 0.07;
                     //Setter ny y verdi
                     mBombs[i]->SetPosition(QVector3D(mBombs[i]->GetPosition().x(), y, mBombs[i]->GetPosition().z()));
+                }
+            }
+
+            //Oppgave 8 og 9
+            //Sjekk for kollisjoner med trofeer og bomber
+            //Finn objektene i nærheten av spilleren
+            QuadTree<std::string, VisualObject*>* quad = mQuadTree.find(mMap["Player"]->getPosition2D());
+            std::vector<VisualObject*> objects;
+            if(quad){
+                //Kollisjonformene blir oppdatert i VisualObject::UpdateTransform
+                //Auto blir en vector itterator<VisualObject*>
+                for(auto it = quad->begin(); it != quad->end(); it++){
+                    objects.push_back(*it);
+                    if(*it == mMap["Player"]){
+
+                    }else if(*it == mMap["CollectorEnemy"]){
+
+                    }
                 }
             }
         }

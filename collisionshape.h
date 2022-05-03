@@ -11,13 +11,28 @@ class CollisionShape
 {
 public:
     CollisionShape(VisualObject* object);
-    VisualObject* mObject;
+
     CollisionShapeMode mCollisionMode;
 
     bool CheckCollision(CollisionShape* col1, CollisionShape* col2);
     virtual bool Collide(CollisionShape* col);
 
-    QVector3D mPos{};
+
+    //For sphere kollisjon
+    virtual void SetRadius(float amount);
+
+    virtual void SetSize(float amount);
+
+    virtual void SetCenter(QVector3D pos);
+
+    float GetRadius(){return mRadius; };
+    QVector3D GetCenter() {return mCenter;};
+protected:
+    bool bShouldCollide = false;
+    VisualObject* mObject;
+    QVector3D mCenter{};
+    QVector3D mSize{};
+    float mRadius = 1;
 };
 
 #endif // COLLISIONSHAPE_H

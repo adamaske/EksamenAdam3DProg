@@ -118,6 +118,11 @@ void VisualObject::Update()
 }
 void VisualObject::UpdateTransform()
 {
+    //Update kollisjon
+    if(mCollision){
+        mCollision->SetCenter(GetPosition());
+        mCollision->SetRadius(1);
+    }
     mMatrix = mPosition * mRotation * mScale;
 }
 
@@ -200,4 +205,9 @@ bool VisualObject::Collide(CollisionShape* coll){
             }
         }
     }
+}
+
+void VisualObject::SetName(std::string name)
+{
+    mName = name;
 }

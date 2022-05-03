@@ -52,3 +52,18 @@ bool CollisionShape::CheckCollision(CollisionShape* col1, CollisionShape* col2){
 bool CollisionShape::Collide(CollisionShape *col){
     return false;
 }
+
+void CollisionShape::SetRadius(float amount)
+{
+
+}
+
+void CollisionShape::SetSize(float amount)
+{
+
+}
+
+void CollisionShape::SetCenter(QVector3D pos)
+{
+
+}

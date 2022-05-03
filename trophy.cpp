@@ -3,9 +3,12 @@
 #include "vector3d.h"
 #include "vertex.h"
 #include "texture.h"
+#include "collisionshape.h"
+#include "spherecollision.h"
 Trophy::Trophy(std::string fileName, Shader& shader, Texture* texture, ObjectState state, CollisionShape* coll, TrophyColor color) : ObjMesh(fileName ,shader, texture, state, coll)
 {
     //readFile(fileName);
+    mName = "Trophy";
     mMatrix.setToIdentity();
 }
 
@@ -75,4 +78,21 @@ bool Trophy::PickupTrophy(){
     }else{
         return false;
     }
+}
+
+bool Trophy::Collide(CollisionShape *coll)
+{
+    //Bare kolliderer hvis man har en collider
+    if(mCollision){
+        //Sjekk at det ikke er denne kollideren
+        if(mCollision != coll){
+            //Hvis collide returnerer sann, returner sann
+            if(mCollision->Collide(coll)){
+                    return true;
+            }else{
+                return false;
+            }
+        }
+    }
+    return false;
 }
