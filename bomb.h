@@ -7,7 +7,9 @@ class Bomb : public ObjMesh
 {
 public:
     Bomb(std::string fileName, Shader& shader, Texture* texture, ObjectState state, CollisionShape* collision);
-
+    bool bDraw;
+    void CollidedWithBomb();
+    virtual void draw() override;
 };
 
 #endif // BOMB_H

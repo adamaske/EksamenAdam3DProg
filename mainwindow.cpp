@@ -96,3 +96,11 @@ void MainWindow::on_fileExit_triggered()
     close();       //Shuts down the whole program
 }
 
+void MainWindow::on_resetButton_toggled(bool checked)
+{
+    if(checked){
+        mRenderWindow->ResetGame();
+        ui->resetButton->setText("Reset");
+    }
+}
+

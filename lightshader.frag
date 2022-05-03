@@ -17,7 +17,7 @@ uniform float lightStrength = 1;
 uniform float specularStrength = 0.1;
 uniform int specularExponent = 32;
 
-uniform vec3 objectColor = vec3(1.0, 1.0, 1.0); //white
+uniform vec3 objectColor = vec3(1.0, 1.0, 0.0); //white
 
 void main() {
 
@@ -27,7 +27,7 @@ void main() {
     //diffuse
     vec3 normalCorrected = normalize(normalTransposed);
     vec3 lightDirection = normalize(lightPosition - fragmentPosition);
-    float angleFactor = max(dot(normalCorrected, lightDirection), 0.3);
+    float angleFactor = max(dot(normalCorrected, lightDirection), 0.1);
     vec3 diffuse = angleFactor * objectColor * lightColor * lightStrength;
 
     //specular
@@ -40,7 +40,7 @@ void main() {
     }
     vec3 specular = spec * lightColor * specularStrength;
 
-    vec3 result = ambient + diffuse + specular;
+    vec3 result = ambient + diffuse + specular * objectColor;
 
     fragColor = vec4(result, 1.0) * texture(textureSampler, UV);
 

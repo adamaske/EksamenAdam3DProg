@@ -50,6 +50,9 @@ bool CollisionShape::CheckCollision(CollisionShape* col1, CollisionShape* col2){
 
 
 bool CollisionShape::Collide(CollisionShape *col){
+    if(!bShouldCollide){
+        return false;
+    }
     if(col){
         if(mCollisionMode == CollisionShapeMode::SPHERE){
             if(col->mCollisionMode == CollisionShapeMode::SPHERE){
@@ -99,4 +102,9 @@ void CollisionShape::SetSize(float amount)
 void CollisionShape::SetCenter(QVector3D pos)
 {
 
+}
+
+void CollisionShape::SetShouldCollide(bool value)
+{
+    bShouldCollide = value;
 }

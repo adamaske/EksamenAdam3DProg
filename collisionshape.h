@@ -27,6 +27,8 @@ public:
 
     float GetRadius(){return mRadius; };
     QVector3D GetCenter() {return mCenter;};
+
+    void SetShouldCollide(bool value);
 protected:
     bool bShouldCollide = false;
     VisualObject* mObject;

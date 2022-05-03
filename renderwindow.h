@@ -40,7 +40,8 @@ public:
     void exposeEvent(QExposeEvent *) override;  //gets called when app is shown and resized
 
      void SwapGameMode();
-
+     //Oppgave 14
+     void ResetGame();
 private slots:
     void render();          //the actual render - function
 
@@ -60,13 +61,15 @@ private:
     //Bomber man
     Enemy* mBomberEnemy;
     QTime mLastBombTime = QTime::currentTime();
+    float mBombTimer = 0;
+    void DoBombLogic();
+    void DoCollisionCheck();
     //Vector for bomber
     std::vector<Bomb*> mBombs;
     BezierCurve* mBezierCurve;
     int mPlayerTrophies = 0;
     int mEnemyTrophies = 0;
-    //Oppgave 14
-    void ResetGame();
+
     //Aksene
     XYZ* mXYZ;
     //Enum til holde editor og play modus

@@ -133,9 +133,10 @@ void RenderWindow::init()
     mMap.insert(std::pair<std::string, VisualObject*>{"Terrain", mTerrain});
     mTerrain->SetName("Terrain");
     //Oppgave 3
-    mSun = new VisualSun("../EksamenAdam3DProg/Sun.obj", *mShaders["PlainShader"], ObjectState::STATIC);
+    mSun = new VisualSun("../EksamenAdam3DProg/Sun.obj", *mShaders["LightShader"], ObjectState::STATIC);
     mMap.insert(std::pair<std::string, VisualObject*>{"Sun", mSun});
     mSun->SetName("Sun");
+    mSun->mObjectColor = QVector3D(1,1,0);
     //Oppgave 4
     //Lager player fra object.obj, gir phongshader og hund tekstur
     mMap.insert(std::pair<std::string, VisualObject*>{"Player",
@@ -153,6 +154,7 @@ void RenderWindow::init()
     //Lager aksen som vises i editor modus
     mXYZ = new XYZ(*mShaders["PlainShader"], ObjectState::STATIC);
     mXYZ->init();
+
     //Oppgave 7
     //Lager kontroll punkter
     std::vector<QVector3D> bezierControls;
@@ -187,25 +189,111 @@ void RenderWindow::init()
         t->SetPosition(QVector3D( -45 + rand() % 90, 0, -20 + rand() % 40));
         //Setter på terrenget
         t->SetPosition(QVector3D(t->GetPosition().x(), mTerrain->GetHeight(t->GetPosition()), t->GetPosition().z()));
-
+        mQuadTree.insert(t->getPosition2D(), &"Trophy " [ mTrophies.size()]-1, t);
     }
 
     //Oppgave 9
     Enemy* e = new Enemy("../EksamenAdam3DProg/enemy.obj", *mShaders["LightShader"], new Texture(), ObjectState::DYNAMIC);
     mMap.insert(std::pair<std::string, VisualObject*>{"CollectorEnemy", e});
+    mQuadTree.insert(e->getPosition2D(), "CollectorEnemy", e);
+
+    //Oppgave 10
+    mMap.insert(std::pair<std::string, VisualObject*>{"Fence 1", new ObjMesh("../EksamenAdam3DProg/fence.obj", *mShaders["LightShader"], ObjectState::STATIC)});
+    mMap.insert(std::pair<std::string, VisualObject*>{"Fence 2", new ObjMesh("../EksamenAdam3DProg/fence.obj", *mShaders["LightShader"], ObjectState::STATIC)});
+
+    mMap["Fence 1"]->init();
+    mMap["Fence 2"]->init();
     //Subdivide quadtree
     mQuadTree.subDivide(2);
     //init every object
     for (auto it = mMap.begin(); it != mMap.end(); it++) {
         //Adds all visual objects to the quadtree
-        mQuadTree.insert((*it).second->getPosition2D(), (*it).first, (*it).second);
         (*it).second->init();
         (*it).second->UpdateTransform();
     }
     mEditorCamera->init();
+
     mEditorCamera->SetPosition(QVector3D(0, 5,0));
+
+    mMap["Fence 1"]->mObjectColor = QVector3D(1,1,1);
+    mMap["Fence 2"]->mObjectColor = QVector3D(1,1,1);
+    mMap["Fence 1"]->SetPosition(QVector3D(3, 5, 4));
+    mMap["Fence 2"]->SetPosition(QVector3D(-3, 5, 2));
+
     glBindVertexArray(0);       //unbinds any VertexArray - good practice
 }
+//Oppgave Bombe
+void RenderWindow::DoBombLogic()
+{
+    //Beveg bomberen lags bezier kruve
+    //Hvis fienden har beveged seg helt til 1, beveg baklengs
+    if(mBomberEnemy->mMovementProgress >= 1){
+        mBomberEnemy->bMovingForward = false;
+    }else if(mBomberEnemy->mMovementProgress <= 0){
+        //Hvis den er negativ, beveg den forover igjen
+        mBomberEnemy->bMovingForward = true;
+    }
+    //Pluss på movement hvis den går fremover, minus hvis den går baklengs
+    if(mBomberEnemy->bMovingForward){
+        mBomberEnemy->mMovementProgress += 0.015f;
+    }else{
+        mBomberEnemy->mMovementProgress -= 0.005f;
+    }
+    mBomberEnemy->mMovementProgress = std::clamp(mBomberEnemy->mMovementProgress, 0.f, 1.f);
+
+    //Set posisjonen til fienden langs bezier kurven på t
+    mBomberEnemy->SetPosition(mBezierCurve->EvaluateBezier(mBomberEnemy->mMovementProgress));
+    //Hvis det er mer eller likt 2 sekunder siden forrige bombe, slepp nå
+    mBombTimer += 0.05;
+    if(mBombTimer >= 5){
+        mBombTimer = 0;
+        //lager en ny bombe
+        mBombs.push_back(new Bomb("../EksamenAdam3DProg/bomb.obj", *mShaders["PlainShader"], mTextures["hund"], ObjectState::STATIC,
+                new SphereCollision(QVector3D( 0,0,0), 1, nullptr)));
+        mBombs[mBombs.size() -1 ]->init();
+        qDebug() << "Spawned bomb";
+        //Setter inn i map
+        mMap.insert(std::pair<std::string, VisualObject*>{&"Bomb " [ mBombs.size()], mBombs[mBombs.size()-1]});
+        qDebug() << "Added bomb to map";
+        //Setter posisjonen til den til bomberen
+        mBombs[mBombs.size()-1]->SetPosition(mBomberEnemy->GetPosition());
+        qDebug() << "Amount of bombs: " << mBombs.size();
+        //Inserter in i quadtreeet
+        mQuadTree.insert(mBombs[mBombs.size()-1]->getPosition2D(), &"Bomb " [ mBombs.size()]-1, mBombs[mBombs.size()-1]);
+    }
+
+    //Send bombene need til terrenget
+    for(int i = 0; i < mBombs.size(); i++){
+        //Oppdater senter til bombene kolliderene
+        if(mBombs[i]->GetPosition().y() > mTerrain->GetHeight(mBombs[i]->GetPosition())){
+            float y = mBombs[i]->GetPosition().y();
+            y -= 0.07;
+            //Setter ny y verdi
+            mBombs[i]->SetPosition(QVector3D(mBombs[i]->GetPosition().x(), y, mBombs[i]->GetPosition().z()));
+        }
+    }
+}
+
+//Oppgave 8 og 9
+void RenderWindow::DoCollisionCheck()
+{
+    //Sjekk for kollisjoner med trofeer og bomber
+    //Finn objektene i nærheten av spilleren
+    QuadTree<std::string, VisualObject*>* quad = mQuadTree.find(mMap["Player"]->getPosition2D());
+    for(int i = 0; i < quad->mObjects.size(); i++){
+        //qDebug() << "Player is in quad with: " << quad->mObjects[i].second->GetName().c_str();
+        //Sjekk om det er en bombe
+        if(quad->mObjects[i].second->GetName() == "Bomb"){
+            //Cast til bombe
+            Bomb* b = dynamic_cast<Bomb*>(quad->mObjects[i].second);
+            if(b){
+                //Denne bomben er nå kollidert, blir ikke kollidert med igjen
+                b->CollidedWithBomb();
+            }
+        }
+    }
+}
+
 //Oppgave 14
 void RenderWindow::ResetGame()
 {
@@ -217,15 +305,13 @@ void RenderWindow::ResetGame()
     //Reset trofeer, bIsActive = true, ny random posisjon
 
     //Reset spiller
-
+    mMap["Player"]->SetPosition(QVector3D(0,0,0));
     //Slett bomber
 
     //Restart bomberman
 
 
 }
-
-
 
 // Called each frame - doing the rendering!!!
 void RenderWindow::render()
@@ -277,85 +363,16 @@ void RenderWindow::render()
         mSun->SetPosition(sunPos);
 
         //Oppgave 7
-        //Beveg bomberen lags bezier kruve
-        //Hvis fienden har beveged seg helt til 1, beveg baklengs
-        if(mBomberEnemy){
-            if(mBomberEnemy->mMovementProgress >= 1){
-                mBomberEnemy->bMovingForward = false;
-            }else if(mBomberEnemy->mMovementProgress <= 0){
-                //Hvis den er negativ, beveg den forover igjen
-                mBomberEnemy->bMovingForward = true;
-            }
-            //Pluss på movement hvis den går fremover, minus hvis den går baklengs
-            if(mBomberEnemy->bMovingForward){
-                mBomberEnemy->mMovementProgress += 0.015f;
-            }else{
-                mBomberEnemy->mMovementProgress -= 0.005f;
-            }
-            mBomberEnemy->mMovementProgress = std::clamp(mBomberEnemy->mMovementProgress, 0.f, 1.f);
-            //Set posisjonen til fienden langs bezier kurven på t
-            mBomberEnemy->SetPosition(mBezierCurve->EvaluateBezier(mBomberEnemy->mMovementProgress));
-            //Hvis det er mer eller likt 2 sekunder siden forrige bombe, slepp nå
-            if(!mLastBombTime.isValid()){
-                mLastBombTime = QTime::currentTime();
-            }
-            if(QTime::currentTime().msec() - 2 >= mLastBombTime.msec()){
-                qDebug() << "Time to spawn bomb";
-                mLastBombTime = QTime::currentTime();
-                //lager en ny bombe
-                mBombs.push_back(new Bomb("../EksamenAdam3DProg/bomb.obj", *mShaders["PlainShader"], mTextures["hund"], ObjectState::STATIC,
-                        new SphereCollision(QVector3D( 0,0,0), 1, nullptr)));
-                mBombs[mBombs.size() -1 ]->init();
-                qDebug() << "Spawned bomb";
-                //Setter inn i map
-                mMap.insert(std::pair<std::string, VisualObject*>{&"Bomb " [ mBombs.size()], mBombs[mBombs.size()-1]});
-                qDebug() << "Added bomb to map";
-                //Setter posisjonen til den til bomberen
-                mBombs[mBombs.size()-1]->SetPosition(mBomberEnemy->GetPosition());
-                qDebug() << "Amount of bombs: " << mBombs.size();
-                //Inserter in i quadtreeet
-                mQuadTree.insert(mBombs[mBombs.size()-1]->getPosition2D(), &"Bomb " [ mBombs.size()]-1, mBombs[mBombs.size()-1]);
 
-            }
-            //Send bombene need til terrenget
-            for(int i = 0; i < mBombs.size(); i++){
-                //Oppdater senter til bombene kolliderene
-                if(mBombs[i]->GetPosition().y() > mTerrain->GetHeight(mBombs[i]->GetPosition())){
-                    float y = mBombs[i]->GetPosition().y();
-                    y -= 0.07;
-                    //Setter ny y verdi
-                    mBombs[i]->SetPosition(QVector3D(mBombs[i]->GetPosition().x(), y, mBombs[i]->GetPosition().z()));
-                }
-            }            
+        if(mBomberEnemy){
+            DoBombLogic();
         }
 
         //Oppgave 8 og 9
-        //Sjekk for kollisjoner med trofeer og bomber
-        //Finn objektene i nærheten av spilleren
-        QuadTree<std::string, VisualObject*>* quad = mQuadTree.find(mMap["Player"]->getPosition2D());
-        //std::vector<VisualObject*> objects;
-        //Iterer gjennom alle objektene i quaden
-        for(auto i = quad->begin(); i != quad->end(); i++){
-            if(mMap["Player"]->Collide((*i)->GetCollisionShape())){
-                qDebug() << "Player collided with something";
-            }
-            //Bare sjekk kollisjoner på vegne av de dynamiske objektene
-            if((*i)->mObjectState == ObjectState::DYNAMIC){
-                for(auto j = quad->begin(); j != quad->end(); j++){
-                    //Ikke kollider med seg selv
-                    if(i != j){
-                        if((*i)->Collide((*j)->GetCollisionShape())){
-                            qDebug() << (*i)->GetName().c_str() << " collided with " << (*j)->GetName().c_str();
-                        }
-                    }
-                }
-            }
+        DoCollisionCheck();
 
-        }
         break;
     }
-
-
 
     //Apply camera to all shaders
     for(auto it = mShaders.begin(); it != mShaders.end(); it++){

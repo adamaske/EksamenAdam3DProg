@@ -49,6 +49,7 @@ void VisualObject::draw(){
     if(!mTexture){
         glBindTexture(GL_TEXTURE_2D,0);
     }
+
     glBindVertexArray(mVAO);
     glUniformMatrix4fv(mMatrixUniform, 1, GL_FALSE, mMatrix.constData());
     glDrawArrays(GL_TRIANGLES, 0, mVertices.size());//mVertices.size());
@@ -145,21 +146,12 @@ void VisualObject::SetRotation(const QVector3D& rotation)
 }
 
 QVector3D VisualObject::GetForward(){
-    qDebug() << "MMatrix: " << mMatrix;
     QVector3D fwd = mMatrix.inverted().column(0).toVector3D();
-    //fwd.setX(mMatrix.inverted().column(1).x());
-    //fwd.setY(mMatrix.inverted().column(1).y());
-    //fwd.setZ(mMatrix.inverted().column(1).z());
     fwd.setX(-fwd.x());
-    qDebug() << "Got Forward: " << fwd;
     return fwd;
 }
 QVector3D VisualObject::GetRight(){
-    QVector3D rgt;// = mMatrix.column(1).toVector3D();
-    rgt.setX(mMatrix.inverted().column(2).x());
-    rgt.setY(mMatrix.inverted().column(2).y());
-    rgt.setZ(mMatrix.inverted().column(2).z());
-    qDebug() << "Got Right: " << rgt;
+    QVector3D rgt = mMatrix.inverted().column(2).toVector3D();
     return rgt;
 }
 

@@ -31,7 +31,7 @@ private:
 
     std::vector<T> m_allObjects;
 
-            void TraverseAll(std::vector<T>& allObjects);
+    void TraverseAll(std::vector<T>& allObjects);
     QuadTree* m_ne;
     QuadTree* m_nw;
     QuadTree* m_se;

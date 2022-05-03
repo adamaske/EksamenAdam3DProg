@@ -83,6 +83,7 @@ void ObjMesh::draw(){
     glUseProgram(mShader.getProgram());
     //Send my model matrix
     mShader.SetUniformMatrix4fv(mMatrix, "mMatrix");
+    mShader.SetUniform3f(1,1,1, "objectColor");
     //Draw object
     glBindVertexArray( mVAO);
     glDrawElements(GL_TRIANGLES, mIndices.size(), GL_UNSIGNED_INT, nullptr);

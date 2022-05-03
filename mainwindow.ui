@@ -29,6 +29,19 @@
      </widget>
     </item>
     <item>
+     <widget class="QPushButton" name="resetButton">
+      <property name="text">
+       <string>Reset</string>
+      </property>
+      <property name="checkable">
+       <bool>true</bool>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item>
      <layout class="QVBoxLayout" name="OpenGLLayout"/>
     </item>
    </layout>
