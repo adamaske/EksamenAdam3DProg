@@ -31,7 +31,6 @@ public:
    void SetPosition(const QVector3D& position);
    void SetPosition(const QMatrix4x4& position);
    virtual void move(float dx, float dy, float dz);
-   virtual void move(float dt);
 
    virtual void MoveForward(float amount);
    virtual void MoveRight(float amount);
@@ -77,6 +76,8 @@ public:
    virtual bool Collide(CollisionShape* coll);
    CollisionShape* GetCollisionShape(){return mCollision;};
    std::string mName = "Object";
+   std::string GetName(){return mName;};
+   void SetName(std::string name);
 
 };
 #endif // VISUALOBJECT_H

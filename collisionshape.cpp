@@ -50,6 +50,28 @@ bool CollisionShape::CheckCollision(CollisionShape* col1, CollisionShape* col2){
 
 
 bool CollisionShape::Collide(CollisionShape *col){
+    if(col){
+        if(mCollisionMode == CollisionShapeMode::SPHERE){
+
+        }
+
+        if(mCollisionMode == CollisionShapeMode::AABB){
+
+        }
+
+        if(mCollisionMode == CollisionShapeMode::SPHERE){
+
+        }
+
+        if(mCollisionMode == CollisionShapeMode::SPHERE){
+
+        }
+
+        if(mCollisionMode == CollisionShapeMode::SPHERE){
+
+        }
+    }
+
     return false;
 }
 

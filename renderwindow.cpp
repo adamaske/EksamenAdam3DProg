@@ -205,6 +205,24 @@ void RenderWindow::init()
     mEditorCamera->SetPosition(QVector3D(0, 5,0));
     glBindVertexArray(0);       //unbinds any VertexArray - good practice
 }
+//Oppgave 14
+void RenderWindow::ResetGame()
+{
+    //Reset poeng
+    mPlayerTrophies = 0;
+    mEnemyTrophies = 0;
+
+
+    //Reset trofeer, bIsActive = true, ny random posisjon
+
+    //Reset spiller
+
+    //Slett bomber
+
+    //Restart bomberman
+
+
+}
 
 
 
@@ -226,7 +244,6 @@ void RenderWindow::render()
         mEditorCamera->init();
         mEditorCamera->perspective(90, static_cast<float>(width()) / static_cast<float>(height()), 0.1, 3000.0);
         //Yaw til kamera med mus input her
-        mEditorCamera->SetPosition(QVector3D(0.0f, 10.f, 0.0f));
         if(mMouseMovementDelta.first != 0){
             mEditorCamera->RotateRight(mMouseMovementDelta.first * 0.1f);
         }
@@ -285,7 +302,7 @@ void RenderWindow::render()
                 qDebug() << "Time to spawn bomb";
                 mLastBombTime = QTime::currentTime();
                 //lager en ny bombe
-                mBombs.push_back(new Bomb("../EksamenAdam3DProg/enemy.obj", *mShaders["PlainShader"], mTextures["hund"], ObjectState::STATIC,
+                mBombs.push_back(new Bomb("../EksamenAdam3DProg/bomb.obj", *mShaders["PlainShader"], mTextures["hund"], ObjectState::STATIC,
                         new SphereCollision(QVector3D( 0,0,0), 1, nullptr)));
                 mBombs[mBombs.size() -1 ]->init();
                 qDebug() << "Spawned bomb";
@@ -311,21 +328,31 @@ void RenderWindow::render()
             //Oppgave 8 og 9
             //Sjekk for kollisjoner med trofeer og bomber
             //Finn objektene i nærheten av spilleren
-            QuadTree<std::string, VisualObject*>* quad = mQuadTree.find(mMap["Player"]->getPosition2D());
-            std::vector<VisualObject*> objects;
-            if(quad){
-                //Kollisjonformene blir oppdatert i VisualObject::UpdateTransform
-                //Auto blir en vector itterator<VisualObject*>
-                for(auto it = quad->begin(); it != quad->end(); it++){
-                    objects.push_back(*it);
-                    if(*it == mMap["Player"]){
-
-                    }else if(*it == mMap["CollectorEnemy"]){
-
-                    }
-                }
-            }
-        }
+//           QuadTree<std::string, VisualObject*>* quad = mQuadTree.find(mMap["Player"]->getPosition2D());
+//           std::vector<VisualObject*> objects;
+//           if(quad){
+//               //Kollisjonformene blir oppdatert i VisualObject::UpdateTransform
+//               //Auto blir en vector itterator<VisualObject*>
+//               for(auto it = quad->begin(); it != quad->end(); it++){
+//                   objects.push_back(*it);
+//                   if(*it == mMap["Player"]){
+//                       for(auto ti = quad->begin(); ti != quad->end(); ti++){
+//                           //Sjekk spiller mot andre objekter
+//                           if((*ti)->GetName() == "Bomb"){
+//                               //Frys spiller
+//                           }
+//                       }
+//                   }else if(*it == mMap["CollectorEnemy"]){
+//                       for(auto ti = quad->begin(); ti != quad->end(); ti++){
+//                           //Sjekk spiller mot andre objekter
+//                           if((*ti)->GetName() == "Bomb"){
+//                               //Frys collectorEnemy
+//                           }
+//                       }
+//                   }
+//               }
+//           }
+       }
         break;
     }
 
@@ -339,8 +366,8 @@ void RenderWindow::render()
         //Send editor kamera sin v og p matrix hvis spillet er i editor modus
         case GameState::Editor :
             //Send view and projection matrices to alle the shaders
-            (*it).second->SetUniformMatrix4fv(*mEditorCamera->mVmatrix, "vMatrix");
-            (*it).second->SetUniformMatrix4fv(*mEditorCamera->mPmatrix, "pMatrix");
+            (*it).second->SetUniformMatrix4fv(mEditorCamera->mVmatrix, "vMatrix");
+            (*it).second->SetUniformMatrix4fv(mEditorCamera->mPmatrix, "pMatrix");
             //glUnifor
             //The visual object sends its own modelMatrix to the shader so it dosent need to be done here
             if((*it).first == "LightShader"){
@@ -352,8 +379,8 @@ void RenderWindow::render()
             //Bruk play kameraet
         case GameState::Play :
             //Send view and projection matrices to alle the shaders
-            (*it).second->SetUniformMatrix4fv(*mPlayCamera->mVmatrix, "vMatrix");
-            (*it).second->SetUniformMatrix4fv(*mPlayCamera->mPmatrix, "pMatrix");
+            (*it).second->SetUniformMatrix4fv(mPlayCamera->mVmatrix, "vMatrix");
+            (*it).second->SetUniformMatrix4fv(mPlayCamera->mPmatrix, "pMatrix");
             //glUnifor
             //The visual object sends its own modelMatrix to the shader so it dosent need to be done here
             if((*it).first == "LightShader"){
@@ -379,7 +406,7 @@ void RenderWindow::render()
         switch(mGameState){
             case GameState::Editor :
             //Oppgave 6
-            mXYZ->draw();
+            //mXYZ->draw();
         break;
             case GameState::Play :
 
@@ -538,7 +565,7 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
         case GameState::Editor :
             //Beveg kamera fremover            
             //mEditorCamera->MoveForward(100);
-            mEditorCamera->translate(0,0, 1);
+            mEditorCamera->MoveForward(1);
         break;
         case GameState::Play :
             //beveg hunden fremover
@@ -552,7 +579,7 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
         case GameState::Editor :
         //beveg kamera bakover       
             //mEditorCamera->MoveForward(-100);
-            mEditorCamera->translate(0,0, -1);
+            mEditorCamera->MoveForward(-1);
         break;
         case GameState::Play :
         //beveg hunden bakover
@@ -591,7 +618,7 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
         switch(mGameState){
         case GameState::Editor :
         //Beveg kamera oppover
-            mEditorCamera->translate(0, 1, 0);
+            mEditorCamera->MoveUp(1);
         break;
         case GameState::Play :
         break;
@@ -602,7 +629,7 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
         switch(mGameState){
         case GameState::Editor :
         //beveg kamera bakover
-            mEditorCamera->translate(0, -1, 0);
+            mEditorCamera->MoveUp(-1);
         break;
         case GameState::Play :
         break;

@@ -1,67 +1,70 @@
 #include "camera.h"
 
 Camera::Camera() : mEye{0,0,0}
-{
-    mPmatrix = new QMatrix4x4{};
-    mPmatrix->setToIdentity();
-    mVmatrix = new QMatrix4x4{};
-    mVmatrix->setToIdentity();
+{  
+    mPmatrix.setToIdentity();
+    mVmatrix.setToIdentity();
 }
 
 void Camera::init()
 {
-    mPmatrix->setToIdentity();
-    mVmatrix->setToIdentity();
+    mPmatrix.setToIdentity();
+    mVmatrix.setToIdentity();
+
+    mVmatrix.translate(mPosition);
 }
 
 void Camera::perspective(int degrees, double aspect, double nearplane, double farplane)
 {
-    mPmatrix->perspective(degrees, aspect, nearplane, farplane);
+    mPmatrix.perspective(degrees, aspect, nearplane, farplane);
 }
 
 void Camera::lookAt(const QVector3D& eye, const QVector3D& at, const QVector3D& up)
 {
     mEye = eye;
-    mVmatrix->lookAt(eye, at, up);
-}
-
-void Camera::translate(float dx, float dy, float dz)
-{
-    mVmatrix->translate(dx, dy, dz);
-
-    //mVmatrix->translate(0, 0, -9);
-    // Rotates the camera
-    mVmatrix->rotate(-20.f, 0.1f, 0.0f);
-}
-
-void Camera::rotate(float dx, float dy, float dz) {
-    mVmatrix->rotate(dx, dy, dz);
+    mVmatrix.lookAt(eye, at, up);
 }
 
 void Camera::MoveForward(float amount)
 {
-    QVector3D fwd = mVmatrix->row(3).toVector3D();
-    mVmatrix->translate(amount * fwd);
+    mVmatrix.translate(amount * GetForward());
+    mPosition += GetForward() * amount;
 }
 
 void Camera::MoveRight(float amount)
 {
-    QVector3D rgt = mVmatrix->column(2).toVector3D();
-    mVmatrix->translate(amount * rgt);
+   mVmatrix.translate(amount * GetRight());
+   mPosition += GetRight() * amount;
 }
 
+void Camera::MoveUp(float amount){
+    mPosition.setY(mPosition.y() + amount);
+}
 void Camera::RotateRight(float amount)
 {
-    mVmatrix->rotate(amount, QVector3D(0, 1,0));
+    mVmatrix.rotate(amount, QVector3D(0, 1,0));
 }
 
 void Camera::SetPosition(QVector3D pos)
 {
-    mVmatrix->setToIdentity();
+    mVmatrix.setToIdentity();
     mEye = pos;
-    mVmatrix->translate(pos);
+    mVmatrix.translate(pos);
 }
 
 QVector3D Camera::GetPosition(){
     return mEye;
+}
+
+QVector3D Camera::GetForward()
+{
+    QVector3D fwd = mVmatrix.inverted().column(0).toVector3D();
+    fwd.setX(-fwd.x());
+    return fwd;
+}
+
+QVector3D Camera::GetRight()
+{
+    QVector3D rgt = mVmatrix.inverted().column(2).toVector3D();
+    return rgt;
 }

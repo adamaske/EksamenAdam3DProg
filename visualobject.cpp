@@ -59,33 +59,6 @@ void VisualObject::move(float dx, float dy, float dz){
     mPosition.translate(dx, dy, dz);
 }
 
-void VisualObject::move(float dt)
-{
-    float degrees = (180 * dt) / M_PI;
-    mRotation.rotate(degrees, 0, 1, 0);
-
-    //Slide
-    QVector3D ds = mVelocity * dt;
-
-    // mPosition = mPosition + ds;		// hvis mPosisjon er Vector3d
-    mPosition.translate(ds.x(), ds.y(), ds.z());	// hvis mPosisjon er Matrix4x4
-
-    // normalen kan generelt være en parameter inn
-    QVector3D normal = QVector3D{ 0.0f, 1.0f, 0.0f };
-
-    // bruker kryssprodukt for å finne rotasjonsvektor
-    QVector3D rotation = QVector3D::crossProduct(normal, mVelocity);
-    rotation.normalize();
-
-    //mRotation.setToIdentity();
-    // bruk formelen ds = r dt ==> dt = ds/r
-    // for å finne ut hvor mye hjulet har rotert
-    // og oppdater rotasjonsmatrisen
-    // husk å starte med mRotation som identitetsmatrise
-
-    mMatrix = mPosition * mRotation * mScale;
-}
-
 void VisualObject::MoveForward(float amount){
     //Z is forward in the world
     qDebug() << "Moved forward: " << (amount * GetForward());
@@ -94,7 +67,6 @@ void VisualObject::MoveForward(float amount){
 }
 void VisualObject::MoveRight(float amount){
     //X is right in the world
-    qDebug() << "Moved right: " << (amount * GetRight());
     mPosition.translate(amount * GetRight());
 }
 void VisualObject::rotate(float dx, float dy, float dz)
@@ -103,7 +75,6 @@ void VisualObject::rotate(float dx, float dy, float dz)
 }
 
 void VisualObject::RotateRight(float amount){
-    qDebug() << "Rotated right: ";
     mRotation.rotate(amount, QVector3D{0, 1, 0});
 }
 std::pair<float, float> VisualObject::getPosition2D()

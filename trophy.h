@@ -15,6 +15,8 @@ public:
     bool bDraw = true;
 
     TrophyColor mColor = TrophyColor::BLUE;
+
+    virtual bool Collide(CollisionShape* coll) override;
 };
 
 #endif // TROPHY_H
