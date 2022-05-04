@@ -155,13 +155,13 @@ void RenderWindow::init()
     //Lager aksen som vises i editor modus
     mXYZ = new XYZ(*mShaders["PlainShader"], ObjectState::STATIC);
     mXYZ->init();
-
+    mXYZ->SetPosition(QVector3D(0, 0, 7));
     //Oppgave 7
     //Lager kontroll punkter
     std::vector<QVector3D> bezierControls;
-    bezierControls.push_back(QVector3D(-40, 8, 40));
-    bezierControls.push_back(QVector3D(0, 8, 10));
-    bezierControls.push_back(QVector3D(20, 8, 20));
+    bezierControls.push_back(QVector3D(-40, 22, 40));
+    bezierControls.push_back(QVector3D(0, 22, 10));
+    bezierControls.push_back(QVector3D(20, 22, 20));
     //lager bezier kurven
     mBezierCurve = new BezierCurve(bezierControls, *mShaders["PlainShader"]);
     mMap.insert(std::pair<std::string, VisualObject*>{"BezierCurve", mBezierCurve});
@@ -172,8 +172,6 @@ void RenderWindow::init()
     //Oppgave 8
     //Lage trofeer
     SpawnTrophies();
-
-
 
     //Oppgave 9
     Enemy* e = new Enemy("../EksamenAdam3DProg/enemy.obj", *mShaders["LightShader"], new Texture(), ObjectState::DYNAMIC);
@@ -196,7 +194,7 @@ void RenderWindow::init()
     }
     mEditorCamera->init();
 
-    mEditorCamera->SetPosition(QVector3D(0, 5,0));
+    mEditorCamera->SetPosition(QVector3D(0, 15,-10));
 
     mMap["Fence 1"]->mObjectColor = QVector3D(1,1,1);
     mMap["Fence 2"]->mObjectColor = QVector3D(1,1,1);
@@ -231,26 +229,34 @@ void RenderWindow::DoBombLogic()
     if(mBombTimer >= 6){
         mBombTimer = 0;
         //lager en ny bombe
-        mBombs.push_back(new Bomb("../EksamenAdam3DProg/bomb.obj", *mShaders["PlainShader"], mTextures["hund"], ObjectState::STATIC, nullptr));
-        mBombs[mBombs.size() -1 ]->init();
-        mBombs[mBombs.size() -1 ]->SetCollisionShape(new CollisionShape(mBombs[mBombs.size() -1], CollisionShapeMode::SPHERE));
+        Bomb* b = new Bomb("../EksamenAdam3DProg/bomb.obj", *mShaders["LightShader"], mTextures["hund"], ObjectState::STATIC, nullptr);
+        mBombs.push_back(b);
+        b->init();
+        b->SetCollisionShape(new CollisionShape(b, CollisionShapeMode::SPHERE));
         qDebug() << "Spawned bomb";
         //Setter inn i map
-        mMap.insert(std::pair<std::string, VisualObject*>{&"Bomb " [ mBombs.size()], mBombs[mBombs.size()-1]});
+        mMap.insert(std::pair<std::string, VisualObject*>{"Bomb " + std::to_string(mBombs.size()-1), b});
         qDebug() << "Added bomb to map";
         //Setter posisjonen til den til bomberen
-        mBombs[mBombs.size()-1]->SetPosition(mBomberEnemy->GetPosition());
+        b->SetPosition(QVector3D(mBomberEnemy->GetPosition().x(), mTerrain->GetHeight(mBomberEnemy->GetPosition()), mBomberEnemy->GetPosition().z()));
+        b->UpdateTransform();
         qDebug() << "Amount of bombs: " << mBombs.size();
-        //Inserter in i quadtreeet
-        mQuadTree.insert(mBombs[mBombs.size()-1]->getPosition2D(), &"Bomb " [ mBombs.size()]-1, mBombs[mBombs.size()-1]);
     }
-
+    return;
     //Send bombene need til terrenget
     for(int i = 0; i < mBombs.size(); i++){
         //Oppdater senter til bombene kolliderene
-        if(mBombs[i]->GetPosition().y() > mTerrain->GetHeight(mBombs[i]->GetPosition())){
+        float desired = mTerrain->GetHeight(mBombs[i]->GetPosition());
+        float actual = mBombs[i]->GetPosition().y();
+        //0.1 toleranse
+        if(actual > desired + 0.1){
             float y = mBombs[i]->GetPosition().y();
-            y -= 0.07;
+            y -= 0.01;
+            //Setter ny y verdi
+            mBombs[i]->SetPosition(QVector3D(mBombs[i]->GetPosition().x(), y, mBombs[i]->GetPosition().z()));
+        }else if(actual < desired - 0.1){
+            float y = mBombs[i]->GetPosition().y();
+            y += 0.01;
             //Setter ny y verdi
             mBombs[i]->SetPosition(QVector3D(mBombs[i]->GetPosition().x(), y, mBombs[i]->GetPosition().z()));
         }
@@ -361,21 +367,20 @@ void RenderWindow::ResetGame()
     mPlayerTrophies = 0;
     mEnemyTrophies = 0;
 
-    //Reset trofeer
-    for(int i = 0;  i < 20; i++){
-        //Sletter alle trofeene
-        mMap.erase("Trophy " + std::to_string(i));
-    }
-    SpawnTrophies();
-    //Reset spiller
-    mMap["Player"]->SetPosition(QVector3D(0,0,0));
-    //Slett bomber
+    //Slett bomber og trofeer
     for(auto it = mMap.begin(); it != mMap.end(); it++){
         //Om dette er en bombe fjern den fra mappet
         if((*it).second->GetName() == "Bomb"){
             mMap.erase(it);
         }
+        if((*it).second->GetName() == "Trophy"){
+            mMap.erase(it);
+        }
     }
+    SpawnTrophies();
+    //Reset spiller
+    mMap["Player"]->SetPosition(QVector3D(0,0,0));
+
     //Restart bomberman
     if(mBomberEnemy){
         mBomberEnemy->mMovementProgress = 0;
@@ -423,7 +428,7 @@ void RenderWindow::render()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     switch(mGameState){
-    //
+    //Oppgave 13, deler opp editor og play funksjonalitet
     case GameState::Editor :
         mEditorCamera->init();
         mEditorCamera->perspective(90, static_cast<float>(width()) / static_cast<float>(height()), 0.1, 3000.0);
@@ -431,6 +436,7 @@ void RenderWindow::render()
         if(mMouseMovementDelta.first != 0){
             mEditorCamera->RotateRight(mMouseMovementDelta.first * 0.1f);
         }
+
     break;
         //Sett kamera bak spilleren
     case GameState::Play :
@@ -443,7 +449,7 @@ void RenderWindow::render()
         //Set y to GetHeight from terrain
         mMap["Player"]->SetPosition(QVector3D(PlayerPos.x(), mTerrain->GetHeight(PlayerPos), PlayerPos.z()));
         //Setter kamera bak og over spilleren
-        mPlayCamera->lookAt(mMap["Player"]->GetPosition() + QVector3D(0,5, -5), mMap["Player"]->GetPosition(), QVector3D{ 0,1,0 });
+        mPlayCamera->lookAt(mMap["Player"]->GetPosition() + QVector3D(0,10, -10), mMap["Player"]->GetPosition(), QVector3D{ 0,1,0 });
 
         //Oppgave 3
         //Adder vinkelen den er på
@@ -466,7 +472,11 @@ void RenderWindow::render()
 
         //Oppgave 8 og 9
         DoCollisionCheck();
-
+        //Plasser samleren på terrenget
+        QVector3D enemyPos = mMap["CollectorEnemy"]->GetPosition();
+        float enemyY = mTerrain->GetHeight(enemyPos);
+        mMap["CollectorEnemy"]->SetPosition(QVector3D(enemyPos.x(), enemyY, enemyPos.z()));
+        //
         //Oppgave 8
         //Sjekk om spilleren er froseet
         if(mMap["Player"]->IsFrozen()){
@@ -538,17 +548,17 @@ void RenderWindow::render()
         (*it).second->UpdateTransform();
         (*it).second->draw();
 
+    }
+    //Oppgave 13, deler opp editor og play funksjonalitet
         switch(mGameState){
             case GameState::Editor :
             //Oppgave 6
-            //mXYZ->draw();
+            mXYZ->draw();
         break;
             case GameState::Play :
 
         break;
         }
-    }
-
     //Qt require us to call this swapBuffers() -function.
     // swapInterval is 1 by default which means that swapBuffers() will (hopefully) block
     // and wait for vsync.
@@ -777,6 +787,15 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
             mGameState = GameState::Play;
         }else{
             mGameState = GameState::Editor;
+        }
+    }
+    if (event->key() == Qt::Key_R)
+    {
+        if(mGameState == GameState::Editor){
+            ResetGame();
+
+        }else{
+            ResetGame();
         }
     }
     //You get the keyboard input like this

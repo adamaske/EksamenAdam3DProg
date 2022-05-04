@@ -88,7 +88,7 @@ public:
    virtual bool Collide(CollisionShape* coll);
     void UpdateCollider();
    //navn
-   std::string mName = "Object";
+   std::string mName{"Object"};//= "Object";
    std::string GetName(){return mName;};
    void SetName(std::string name);
 

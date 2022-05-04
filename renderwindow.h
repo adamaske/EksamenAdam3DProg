@@ -66,8 +66,9 @@ private:
 
     void DoCollisionCheck();
     float mPlayerFreezeTimer = 0;
-    float mEnemyFreezeTiemr = 0;
+    float mEnemyFreezeTimer = 0;
     void FreezePlayer();
+    void FreezeCollector();
     void SpawnTrophies();
     //Vector for bomber
     std::vector<Bomb*> mBombs;
