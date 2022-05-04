@@ -71,7 +71,7 @@ protected:
    QVector3D mSize;
    //Referanse til en mCollision, som er en kollisjonshape
    CollisionShape* mCollision;
-
+   bool bIsFrozen = false;
 public:
    Shader &mShader;
    Texture* mTexture;
@@ -86,10 +86,18 @@ public:
    CollisionShape* GetCollisionShape(){return mCollision;};
    void SetCollisionShape(CollisionShape* coll);
    virtual bool Collide(CollisionShape* coll);
-
+    void UpdateCollider();
+   //navn
    std::string mName = "Object";
    std::string GetName(){return mName;};
    void SetName(std::string name);
+
+
+   //Funksjon som stopper objektet
+   void Freeze();
+   //Lar det bevege seg igjen
+   void Unfreeze();
+   bool IsFrozen() {return bIsFrozen;};
 
 };
 #endif // VISUALOBJECT_H

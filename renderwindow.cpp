@@ -25,7 +25,7 @@
 #include "beziercurve.h"
 #include "bomb.h"
 #include "collisionshape.h"
-#include "spherecollision.h"
+
 
 RenderWindow::RenderWindow(const QSurfaceFormat &format, MainWindow *mainWindow)
     : mContext(nullptr), mInitialized(false), mMainWindow(mainWindow), mQuadTree(Point2D(50,50), Point2D(-50,50), Point2D(50,-50), Point2D(-50,-50))
@@ -144,7 +144,8 @@ void RenderWindow::init()
     mMap["Player"]->RotateRight(-90);
     mMap["Player"]->SetPosition(QVector3D(0, 0, 0));
     mMap["Player"]->SetName("Player");
-    mMap["Player"]->SetCollisionShape(new SphereCollision(mMap["Player"]->GetPosition(), 2, mMap["Player"]));
+    //Gives collider to palyer
+    mMap["Player"]->SetCollisionShape(new CollisionShape(mMap["Player"], CollisionShapeMode::SPHERE));
     //Oppgave 5
     //lager kameraer
     mPlayCamera = new Camera();
@@ -169,28 +170,9 @@ void RenderWindow::init()
     mMap.insert(std::pair<std::string, VisualObject*>{"BomberEnemy", mBomberEnemy});
 
     //Oppgave 8
+    SpawnTrophies();
     //Lage trofeer
-    TrophyColor color;
-    Texture* mTex;
-    for(int i = 0; i < 20; i++){
-        //Partall blir blå, oddetall røde
-        if(i % 2 == 0){
-            color = TrophyColor::BLUE;
-            mTex = mTextures["Blue"];
-        }else{
-            color = TrophyColor::RED;
-            mTex = mTextures["Red"];
-        }
-        Trophy* t = new Trophy("../EksamenAdam3DProg/trophy.obj", *mShaders["LightShader"], mTex,
-                ObjectState::STATIC, new SphereCollision(QVector3D(0,0,0), 2, nullptr), color);
-        mTrophies.push_back(t);
-        mMap.insert(std::pair<std::string, VisualObject*>{&"Trophy " [ mTrophies.size()] - 1, t});
-        //Setter tilfedlig sted mellom -30 og 30 x og -10 og 10 z
-        t->SetPosition(QVector3D( -45 + rand() % 90, 0, -20 + rand() % 40));
-        //Setter på terrenget
-        t->SetPosition(QVector3D(t->GetPosition().x(), mTerrain->GetHeight(t->GetPosition()), t->GetPosition().z()));
-        mQuadTree.insert(t->getPosition2D(), &"Trophy " [ mTrophies.size()]-1, t);
-    }
+
 
     //Oppgave 9
     Enemy* e = new Enemy("../EksamenAdam3DProg/enemy.obj", *mShaders["LightShader"], new Texture(), ObjectState::DYNAMIC);
@@ -245,12 +227,12 @@ void RenderWindow::DoBombLogic()
     mBomberEnemy->SetPosition(mBezierCurve->EvaluateBezier(mBomberEnemy->mMovementProgress));
     //Hvis det er mer eller likt 2 sekunder siden forrige bombe, slepp nå
     mBombTimer += 0.05;
-    if(mBombTimer >= 5){
+    if(mBombTimer >= 6){
         mBombTimer = 0;
         //lager en ny bombe
-        mBombs.push_back(new Bomb("../EksamenAdam3DProg/bomb.obj", *mShaders["PlainShader"], mTextures["hund"], ObjectState::STATIC,
-                new SphereCollision(QVector3D( 0,0,0), 1, nullptr)));
+        mBombs.push_back(new Bomb("../EksamenAdam3DProg/bomb.obj", *mShaders["PlainShader"], mTextures["hund"], ObjectState::STATIC, nullptr));
         mBombs[mBombs.size() -1 ]->init();
+        mBombs[mBombs.size() -1 ]->SetCollisionShape(new CollisionShape(mBombs[mBombs.size() -1], CollisionShapeMode::SPHERE));
         qDebug() << "Spawned bomb";
         //Setter inn i map
         mMap.insert(std::pair<std::string, VisualObject*>{&"Bomb " [ mBombs.size()], mBombs[mBombs.size()-1]});
@@ -277,21 +259,98 @@ void RenderWindow::DoBombLogic()
 //Oppgave 8 og 9
 void RenderWindow::DoCollisionCheck()
 {
-    //Sjekk for kollisjoner med trofeer og bomber
-    //Finn objektene i nærheten av spilleren
-    QuadTree<std::string, VisualObject*>* quad = mQuadTree.find(mMap["Player"]->getPosition2D());
-    for(int i = 0; i < quad->mObjects.size(); i++){
-        //qDebug() << "Player is in quad with: " << quad->mObjects[i].second->GetName().c_str();
-        //Sjekk om det er en bombe
-        if(quad->mObjects[i].second->GetName() == "Bomb"){
-            //Cast til bombe
-            Bomb* b = dynamic_cast<Bomb*>(quad->mObjects[i].second);
-            if(b){
-                //Denne bomben er nå kollidert, blir ikke kollidert med igjen
-                b->CollidedWithBomb();
+    //Quad treet mitt er wonky så fungerer bedre å gjøre det på denne måten foreløpig
+    //Går gjennom hvert objekt i map
+    for(auto it = mMap.begin(); it != mMap.end(); it++){
+        //Ikke collide spiller mot seg selv
+        if((*it).second != mMap["Player"]){
+            //Hvis spiller colliderer med it
+            if(mMap["Player"]->Collide((*it).second->GetCollisionShape())){
+                //Sjekk bare kollisjoner for bombe of trofeer
+                //Hvis navnet til objektet spilleren kolliderte med er Bomb, så er det en bombe
+                if((*it).second->GetName() == "Bomb"){
+                    qDebug() << "Player collided with bomb";
+                    //Få Bomb* referanse
+                    Bomb* b = dynamic_cast<Bomb*>((*it).second);
+                    if(b){
+                        //Hvis casten fungerte si til bomben at vi kolliderte)
+                        b->CollidedWithBomb();
+                        FreezePlayer();
+                    }
+                }
+                //Hvis navnet er trofee
+                if((*it).second->GetName() == "Trophy"){
+                    //Skaf trofee peker
+                    Trophy* t = dynamic_cast<Trophy*>((*it).second);
+                    if(t){
+                        //Sjekk for riktig farge
+                        if(t->mColor == TrophyColor::BLUE) {
+                            if(t->PickupTrophy()){
+                                qDebug() << "Picked up trophy";
+                                mPlayerTrophies++;
+                            }
+                        }
+
+                    }
+                }
             }
         }
     }
+    for(auto it = mMap.begin(); it != mMap.end(); it++){
+        if((*it).second != mMap["CollectorEnemy"]){
+            //Kollider det med samleren
+            if(mMap["CollectorEnemy"]->Collide((*it).second->GetCollisionShape())){
+                //Sjekk bare kollisjoner for bombe of trofeer
+                if((*it).second->GetName() == "Bomb"){
+                    qDebug() << "Collector collided with bomb";
+                    Bomb* b = dynamic_cast<Bomb*>((*it).second);
+                    if(b){
+                        b->CollidedWithBomb();
+                    }
+                }
+                if((*it).second->GetName() == "Trophy"){
+                    Trophy* t = dynamic_cast<Trophy*>((*it).second);
+                    if(t){
+                        if(t->mColor == TrophyColor::RED) {
+                            if(t->PickupTrophy()){
+                                qDebug() << "Picked up trophy";
+                                mEnemyTrophies++;
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+
+    //Sjekk om enten av de har tatt allle trofeene
+    if(mPlayerTrophies >= 10){
+        //Spiller vant
+        //Oppgave 12, her vinner spilleren og spillet restartes
+            ResetGame();
+    }
+    if(mEnemyTrophies >= 10){
+        //Fiende vant
+        //Oppgave 12, her vinner fienden og spiller restartes
+            ResetGame();
+    }
+
+    return;
+}
+
+void RenderWindow::FreezePlayer()
+{
+    mPlayerFreezeTimer = 0;
+
+    mMap["Player"]->Freeze();
+}
+
+void RenderWindow::FreezeCollector()
+{
+    mEnemyFreezeTimer = 0;
+
+    mMap["CollectorEnemy"]->Freeze();
 }
 
 //Oppgave 14
@@ -301,9 +360,12 @@ void RenderWindow::ResetGame()
     mPlayerTrophies = 0;
     mEnemyTrophies = 0;
 
-
-    //Reset trofeer, bIsActive = true, ny random posisjon
-
+    //Reset trofeer
+    for(int i = 0;  i < 20; i++){
+        //Sletter alle trofeene
+        mMap.erase("Trophy " + std::to_string(i));
+    }
+    SpawnTrophies();
     //Reset spiller
     mMap["Player"]->SetPosition(QVector3D(0,0,0));
     //Slett bomber
@@ -311,6 +373,32 @@ void RenderWindow::ResetGame()
     //Restart bomberman
 
 
+}
+
+void RenderWindow::SpawnTrophies(){
+    TrophyColor color;
+    Texture* mTex;
+    for(int i = 0; i < 20; i++){
+        //Partall blir blå, oddetall røde, sett riktig tekstur
+        if(i % 2 == 0){
+            color = TrophyColor::BLUE;
+            mTex = mTextures["Blue"];
+        }else{
+            color = TrophyColor::RED;
+            mTex = mTextures["Red"];
+        }
+        //Lager nytt trofee
+        Trophy* t = new Trophy("../EksamenAdam3DProg/trophy.obj", *mShaders["LightShader"], mTex,
+                ObjectState::STATIC, nullptr, color);
+        //Gir kollider til trofeet
+        t->SetCollisionShape(new CollisionShape(t, CollisionShapeMode::SPHERE));
+        //Legg til i mMap med index
+        mMap.insert(std::pair<std::string, VisualObject*>{"Trophy " + std::to_string(i), t});
+        //Setter tilfedlig sted
+        t->SetPosition(QVector3D( -45 + rand() % 90, 0, -20 + rand() % 40));
+        //Setter på terrenget
+        t->SetPosition(QVector3D(t->GetPosition().x(), mTerrain->GetHeight(t->GetPosition()), t->GetPosition().z()));
+    }
 }
 
 // Called each frame - doing the rendering!!!
@@ -341,7 +429,7 @@ void RenderWindow::render()
         // verticalAngle, aspectRatio, nearPlane,farPlane
         mPlayCamera->perspective(90, static_cast<float>(width()) / static_cast<float>(height()), 0.1, 3000.0);
 
-        //
+        //Oppgave 5
         QVector3D PlayerPos = mMap["Player"]->GetPosition();
         //Set y to GetHeight from terrain
         mMap["Player"]->SetPosition(QVector3D(PlayerPos.x(), mTerrain->GetHeight(PlayerPos), PlayerPos.z()));
@@ -363,7 +451,6 @@ void RenderWindow::render()
         mSun->SetPosition(sunPos);
 
         //Oppgave 7
-
         if(mBomberEnemy){
             DoBombLogic();
         }
@@ -371,6 +458,29 @@ void RenderWindow::render()
         //Oppgave 8 og 9
         DoCollisionCheck();
 
+        //Oppgave 8
+        //Sjekk om spilleren er froseet
+        if(mMap["Player"]->IsFrozen()){
+            mPlayerFreezeTimer += 0.02;
+            //Den skal være froseset i 2 sekunder, 2sek / 120 frames blir ca 0.02 sek per frame
+            if(mPlayerFreezeTimer > 2){
+                //Reset timeren
+                mPlayerFreezeTimer = 0;
+                //Spilleren er ikke fryst lenger
+                mMap["Player"]->Unfreeze();
+            }
+        }
+        //Sjekk om fienden er froseet
+        if(mMap["CollectorEnemy"]->IsFrozen()){
+            mEnemyFreezeTimer += 0.02;
+            //Den skal være froseset i 2 sekunder, 2sek / 120 frames blir ca 0.02 sek per frame
+            if(mEnemyFreezeTimer > 2){
+                //Reset timeren
+                mEnemyFreezeTimer = 0;
+                //Spilleren er ikke fryst lenger
+                mMap["CollectorEnemy"]->Unfreeze();
+            }
+        }
         break;
     }
 

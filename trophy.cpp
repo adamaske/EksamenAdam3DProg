@@ -4,12 +4,13 @@
 #include "vertex.h"
 #include "texture.h"
 #include "collisionshape.h"
-#include "spherecollision.h"
 Trophy::Trophy(std::string fileName, Shader& shader, Texture* texture, ObjectState state, CollisionShape* coll, TrophyColor color) : ObjMesh(fileName ,shader, texture, state, coll)
 {
+    mColor = color;
     //readFile(fileName);
     mName = "Trophy";
     mMatrix.setToIdentity();
+    mCollision = new CollisionShape(this, CollisionShapeMode::SPHERE);
 }
 
 void Trophy::init(){
@@ -60,6 +61,7 @@ void Trophy::draw(){
        glBindTexture(GL_TEXTURE_2D, mTexture->id());
        glUniform1i(mTextureUniform, 0);
     }
+    mCollision->SetCenter(GetPosition());
     //use my shader
     glUseProgram(mShader.getProgram());
     //Send my model matrix
@@ -82,12 +84,14 @@ bool Trophy::PickupTrophy(){
 
 bool Trophy::Collide(CollisionShape *coll)
 {
+
     //Bare kolliderer hvis man har en collider
     if(mCollision){
         //Sjekk at det ikke er denne kollideren
         if(mCollision != coll){
             //Hvis collide returnerer sann, returner sann
             if(mCollision->Collide(coll)){
+                mCollision->SetShouldCollide(false);
                     return true;
             }else{
                 return false;

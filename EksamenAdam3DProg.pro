@@ -6,20 +6,16 @@ CONFIG      += c++17
 TARGET      = 3D-programmering
 
 SOURCES += main.cpp \
-    aabbcollision.cpp \
     beziercurve.cpp \
     bomb.cpp \
     camera.cpp \
     collisionshape.cpp \
-    cubecollision.cpp \
     enemy.cpp \
     logger.cpp \
     mainwindow.cpp \
     objmesh.cpp \
-    oobbcollision.cpp \
     renderwindow.cpp \
     shader.cpp \
-    spherecollision.cpp \
     terrain.cpp \
     texture.cpp \
     trophy.cpp \
@@ -32,20 +28,16 @@ SOURCES += main.cpp \
 
 HEADERS += \
     QuadTree.h \
-    aabbcollision.h \
     beziercurve.h \
     bomb.h \
     camera.h \
     collisionshape.h \
-    cubecollision.h \
     enemy.h \
     logger.h \
     mainwindow.h \
     objmesh.h \
-    oobbcollision.h \
     renderwindow.h \
     shader.h \
-    spherecollision.h \
     stb_image.h \
     terrain.h \
     texture.h \

@@ -61,21 +61,33 @@ void VisualObject::move(float dx, float dy, float dz){
 }
 
 void VisualObject::MoveForward(float amount){
+    if(bIsFrozen){
+        return;
+    }
     //Z is forward in the world
     mPosition.translate(amount * GetForward());
     UpdateTransform();
 }
 void VisualObject::MoveRight(float amount){
     //X is right in the world
+    if(bIsFrozen){
+        return;
+    }
     mPosition.translate(amount * GetRight());
     UpdateTransform();
 }
 void VisualObject::rotate(float dx, float dy, float dz)
 {
+    if(bIsFrozen){
+        return;
+    }
     mMatrix.rotate(dx, dy, dz);
 }
 
 void VisualObject::RotateRight(float amount){
+    if(bIsFrozen){
+        return;
+    }
     mRotation.rotate(amount, QVector3D{0, 1, 0});
 }
 std::pair<float, float> VisualObject::getPosition2D()
@@ -158,8 +170,7 @@ QVector3D VisualObject::GetRight(){
 void VisualObject::SetCollisionShape(CollisionShape *coll)
 {
     mCollision = coll;
-    coll->SetRadius(2);
-    coll->SetCenter(GetPosition());
+
 }
 
 bool VisualObject::Collide(CollisionShape* coll){
@@ -171,13 +182,35 @@ bool VisualObject::Collide(CollisionShape* coll){
             if(mCollision->Collide(coll)){
                     return true;
             }else{
+
                 return false;
             }
+        }else{
+
         }
+    }else{
+
+    }
+}
+
+void VisualObject::UpdateCollider()
+{
+    if(mCollision){
+        mCollision->SetCenter(GetPosition());
     }
 }
 
 void VisualObject::SetName(std::string name)
 {
     mName = name;
+}
+
+void VisualObject::Freeze()
+{
+    bIsFrozen = true;
+}
+
+void VisualObject::Unfreeze()
+{
+    bIsFrozen = false;
 }

@@ -63,7 +63,12 @@ private:
     QTime mLastBombTime = QTime::currentTime();
     float mBombTimer = 0;
     void DoBombLogic();
+
     void DoCollisionCheck();
+    float mPlayerFreezeTimer = 0;
+    float mEnemyFreezeTiemr = 0;
+    void FreezePlayer();
+    void SpawnTrophies();
     //Vector for bomber
     std::vector<Bomb*> mBombs;
     BezierCurve* mBezierCurve;
@@ -74,8 +79,6 @@ private:
     XYZ* mXYZ;
     //Enum til holde editor og play modus
     GameState mGameState = GameState::Play;
-    //Trofeer
-    std::vector<Trophy*> mTrophies;
 
     std::pair<float, float> mMouseMovement{0, 0};
     std::pair<float, float> mMouseMovementDelta{0, 0};

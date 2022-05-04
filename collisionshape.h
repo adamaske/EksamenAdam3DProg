@@ -10,14 +10,12 @@ enum CollisionShapeMode{
 class CollisionShape
 {
 public:
-    CollisionShape(VisualObject* object);
+    //Konstruer med modus og objekt
+    CollisionShape(VisualObject* object, CollisionShapeMode mode);
 
-    CollisionShapeMode mCollisionMode;
-
-    bool CheckCollision(CollisionShape* col1, CollisionShape* col2);
     virtual bool Collide(CollisionShape* col);
 
-
+    void UpdateCollider();
     //For sphere kollisjon
     virtual void SetRadius(float amount);
 
@@ -26,14 +24,22 @@ public:
     virtual void SetCenter(QVector3D pos);
 
     float GetRadius(){return mRadius; };
-    QVector3D GetCenter() {return mCenter;};
 
+    QVector3D GetCenter() {return mCenter;};
+    //Endre om kollisjonen får lov til å kollidere
     void SetShouldCollide(bool value);
 protected:
-    bool bShouldCollide = false;
+    //Hvilket primitv skal det kollidere som
+    CollisionShapeMode mCollisionMode;
+    //Hvis en kollisjon skal bli godtatt, deaktiveres om objektet bare kan kollidere en gang
+    bool bShouldCollide = true;
+    //Referanse til objektet denne kollisjonen sitter på
     VisualObject* mObject;
+    //Senter av kollisjonen,
     QVector3D mCenter{};
+    //Størrelsen, ikke brukt
     QVector3D mSize{};
+    //Hvis dette er en sphere kollisjon, så trenger den radius
     float mRadius = 1;
 };
 

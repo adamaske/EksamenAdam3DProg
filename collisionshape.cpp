@@ -1,67 +1,31 @@
 #include "collisionshape.h"
 #include "QVector2D"
-#include "spherecollision.h"
-#include "cubecollision.h"
-CollisionShape::CollisionShape(VisualObject* object) : mObject(object)
+
+CollisionShape::CollisionShape(VisualObject* object, CollisionShapeMode mode) : mObject(object)
 {
-
+    mCollisionMode = mode;
 }
-
-bool CollisionShape::CheckCollision(CollisionShape* col1, CollisionShape* col2){
-//    QVector3D pos1;
-//    QVector3D pos2;
-//    QVector3D size1;
-//    QVector3D size2 ;
-//    if(col1->mCollisionMode == CollisionShapeMode::CUBE && col2->mCollisionMode == CollisionShapeMode::CUBE){
-//        //Cube collisions
-
-//        // collision x-axis?
-//        bool collisionX = pos1.x() + size1.x() >= pos2.x() &&
-//            pos2.x() + size2.x() >= pos1.x();
-//        // collision y-axis?
-//        bool collisionY = pos1.y() + size1.y() >= pos2.y() &&
-//            pos2.y() + size2.y() >= pos1.y();
-//        // collision only if on both axes
-//        return collisionX && collisionY;
-//    }
-//    if((col1->mCollisionMode == CollisionShapeMode::CUBE && col2->mCollisionMode == CollisionShapeMode::SPHERE) ||
-//            (col1->mCollisionMode == CollisionShapeMode::SPHERE && col2->mCollisionMode == CollisionShapeMode::SPHERE)){
-//        //Cube and sphere collision
-//        SphereCollision* sphere;
-//        CollisionShape* cube;
-//        if(col1->mCollisionMode == CollisionShapeMode::SPHERE){
-//            sphere = static_cast<SphereCollision*>(col1);
-//            cube = static_cast<CubeCollision*>(col2);
-//        }else if(col2->mCollisionMode == CollisionShapeMode::SPHERE){
-//            sphere = static_cast<SphereCollision*>(col2);
-//            cube = static_cast<CubeCollision*>(col1);
-//        }
-//        QVector3D center = pos1;
-//        QVector3D aabb_half_extents(size1 / 2);
-//        QVector3D aabb_center(pos1 + aabb_half_extents);
-
-//        QVector3D difference = center - aabb_center;
-
-
-//    }
-//    return false;
-    return false;
-}
-
 
 bool CollisionShape::Collide(CollisionShape *col){
     if(!bShouldCollide){
         return false;
     }
+    //Pass på at kollisjonen finnes
     if(col){
+        //Oppdater den andre kolliderern
+        col->UpdateCollider();
+        //Oppdater denne kollideren
+        UpdateCollider();
+        //Sjekk om dette er en sphere)
         if(mCollisionMode == CollisionShapeMode::SPHERE){
+            //Gjør sphere til sphere om begge er spheres
             if(col->mCollisionMode == CollisionShapeMode::SPHERE){
-                //Sphere to sphere collision
-
+                //Forskjellen mellom de sentrene
                 QVector3D difference = GetCenter() - col->GetCenter();
+                //Lengden på denne vektoren er avstanden mellom punktene
                 float length = difference.length();
-
-                if(length < GetRadius()+col->GetRadius()){
+                //Hvis avstanden er mindre enn de to radiusene sammenlagt, så kolliderer objetkene
+                if(length < (GetRadius()+col->GetRadius())){
                     return true;
                 }else{
                     return false;
@@ -89,19 +53,25 @@ bool CollisionShape::Collide(CollisionShape *col){
     return false;
 }
 
+void CollisionShape::UpdateCollider()
+{
+    SetCenter(mObject->GetPosition());
+    SetRadius(2);
+}
+
 void CollisionShape::SetRadius(float amount)
 {
-
+    mRadius = amount;
 }
 
 void CollisionShape::SetSize(float amount)
 {
-
+    //epic fail
 }
 
 void CollisionShape::SetCenter(QVector3D pos)
 {
-
+    mCenter = pos;
 }
 
 void CollisionShape::SetShouldCollide(bool value)
