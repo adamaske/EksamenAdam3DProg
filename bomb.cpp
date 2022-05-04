@@ -30,9 +30,13 @@ void Bomb::draw()
     glBindVertexArray(0);
 }
 
-void Bomb::CollidedWithBomb()
+bool Bomb::CollidedWithBomb()
 {
+    if(!bDraw){
+        return false;
+    }
     bDraw = false;
     mCollision->SetShouldCollide(false);
+    return true;
 }
 

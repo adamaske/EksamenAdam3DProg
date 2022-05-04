@@ -32,7 +32,7 @@
 //Oppgave 4 er ferdig
 //Oppgave 5 er ferdig
 //Oppgave 6 er ferdig
-//Oppgave 7: bombene blir plassert helt feil eller syntes ikke, men funksjonaliteten for kollisjon og frysning av spiller og NPC er ferdig
+//Oppgave 7 er ferdig, men bombene syns bare når jeg builder prosjektet uten pro.user fil og bruker "replacment" MinGW komplilereren
 //Oppgave 8 er ferdig
 //Oppgave 9 Fienden beveger seg ikke, men funksjonalitet for å plukke opp trofeer er ferdig. Spilleren plukker opp trofeer som den skal
 //Oppgave 10 Gjerdene har ikke kollisjon og ikke hvit farge
@@ -300,8 +300,9 @@ void RenderWindow::DoCollisionCheck()
                     Bomb* b = dynamic_cast<Bomb*>((*it).second);
                     if(b){
                         //Hvis casten fungerte si til bomben at vi kolliderte)
-                        b->CollidedWithBomb();
-                        FreezePlayer();
+                        if(b->CollidedWithBomb()){
+                            FreezePlayer();
+                        }
                     }
                 }
                 //Hvis navnet er trofee
@@ -332,7 +333,9 @@ void RenderWindow::DoCollisionCheck()
                     qDebug() << "Collector collided with bomb";
                     Bomb* b = dynamic_cast<Bomb*>((*it).second);
                     if(b){
-                        b->CollidedWithBomb();
+                        if(b->CollidedWithBomb()){
+                            b->Freeze();
+                        }
                     }
                 }
                 if((*it).second->GetName() == "Trophy"){
