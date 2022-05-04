@@ -53,10 +53,6 @@ FORMS += \
     mainwindow.ui
 
 DISTFILES += \
-    billboardshader.frag \
-    billboardshader.vert \
-    heightshader.frag \
-    heightshader.vert \
     lightshader.frag \
     lightshader.vert \
     plainshader.frag \

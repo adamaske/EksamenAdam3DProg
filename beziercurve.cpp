@@ -2,6 +2,7 @@
 #include "vertex.h"
 BezierCurve::BezierCurve(std::vector<QVector3D> controlPoints, Shader& shader) : VisualObject(shader, ObjectState::STATIC, nullptr)
 {
+    //Denne klassen er tatt fra tidligere Oblig jeg har levert
     mControlPoints = controlPoints;
     //Create vertexs from control points
     for (auto it : mControlPoints) {

@@ -4,10 +4,9 @@
 #include <sstream>
 #include <iostream>
 #include "qmatrix4x4.h"
-//#include "GL/glew.h" - using QOpenGLFunctions instead
-
 #include "logger.h" //For our utility Logger class
 
+//Hentet fra tidligere oblig
 Shader::Shader(const GLchar *vertexPath, const GLchar *fragmentPath)
 {
     initializeOpenGLFunctions();    //must do this to get access to OpenGL functions in QOpenGLFunctions

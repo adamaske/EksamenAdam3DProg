@@ -32,7 +32,7 @@
 //Oppgave 4 er ferdig
 //Oppgave 5 er ferdig
 //Oppgave 6 er ferdig
-//Oppgave 7: bombene blir plassert helt feil eller syntes ikke, men funksjonaliteten er ferdig
+//Oppgave 7: bombene blir plassert helt feil eller syntes ikke, men funksjonaliteten for kollisjon og frysning av spiller og NPC er ferdig
 //Oppgave 8 er ferdig
 //Oppgave 9 Fienden beveger seg ikke, men funksjonalitet for å plukke opp trofeer er ferdig. Spilleren plukker opp trofeer som den skal
 //Oppgave 10 Gjerdene har ikke kollisjon og ikke hvit farge
@@ -41,7 +41,8 @@
 //Oppgave 13 er ferdig
 //Oppgave 14 Mangler GUI element, men å trykke R resetter spillet
 //Oppgave 15 hehe vansklig å justere uten npc som beveger seg
-//Oppgave 16 håper det er bra nok
+//Oppgave 16
+//Video ligger i mappen sammen med kode filene
 
 RenderWindow::RenderWindow(const QSurfaceFormat &format, MainWindow *mainWindow)
     : mContext(nullptr), mInitialized(false), mMainWindow(mainWindow), mQuadTree(Point2D(50,50), Point2D(-50,50), Point2D(50,-50), Point2D(-50,-50))
@@ -177,6 +178,7 @@ void RenderWindow::init()
     mXYZ->SetPosition(QVector3D(0, 0, 7));
 
     //Oppgave 7
+    //BezierCurve klassen er hentet fra tidligere Oblig jeg har levert
     //Lager kontroll punkter
     std::vector<QVector3D> bezierControls;
     bezierControls.push_back(QVector3D(-40, 22, 40));
