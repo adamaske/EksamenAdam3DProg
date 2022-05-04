@@ -51,25 +51,31 @@ private:
     //Alt som renders i Map
     std::unordered_map<std::string, VisualObject*> mMap;
     QuadTree<std::string, VisualObject*> mQuadTree;
+
     //Referanse til kamera som følger spiller
     Camera *mPlayCamera;
     Camera *mEditorCamera;
+
     //Referanse til terrenget
     Terrain* mTerrain;
+
     //Refereanse til solen
     VisualSun* mSun;
+
     //Bomber man
-    Enemy* mBomberEnemy;
-    QTime mLastBombTime = QTime::currentTime();
+    Enemy* mBomberEnemy;    
     float mBombTimer = 0;
     void DoBombLogic();
 
     void DoCollisionCheck();
+
     float mPlayerFreezeTimer = 0;
     float mEnemyFreezeTimer = 0;
     void FreezePlayer();
     void FreezeCollector();
+
     void SpawnTrophies();
+
     //Vector for bomber
     std::vector<Bomb*> mBombs;
     BezierCurve* mBezierCurve;
@@ -83,6 +89,7 @@ private:
 
     std::pair<float, float> mMouseMovement{0, 0};
     std::pair<float, float> mMouseMovementDelta{0, 0};
+
     void mouseMoveEvent(QMouseEvent *event) override;
 
     QOpenGLContext *mContext{nullptr};  //Our OpenGL context

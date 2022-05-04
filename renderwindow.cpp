@@ -221,7 +221,6 @@ void RenderWindow::DoBombLogic()
         mBomberEnemy->mMovementProgress -= 0.005f;
     }
     mBomberEnemy->mMovementProgress = std::clamp(mBomberEnemy->mMovementProgress, 0.f, 1.f);
-
     //Set posisjonen til fienden langs bezier kurven på t
     mBomberEnemy->SetPosition(mBezierCurve->EvaluateBezier(mBomberEnemy->mMovementProgress));
     //Hvis det er mer eller likt 2 sekunder siden forrige bombe, slepp nå
@@ -233,16 +232,14 @@ void RenderWindow::DoBombLogic()
         mBombs.push_back(b);
         b->init();
         b->SetCollisionShape(new CollisionShape(b, CollisionShapeMode::SPHERE));
-        qDebug() << "Spawned bomb";
         //Setter inn i map
         mMap.insert(std::pair<std::string, VisualObject*>{"Bomb " + std::to_string(mBombs.size()-1), b});
-        qDebug() << "Added bomb to map";
         //Setter posisjonen til den til bomberen
         b->SetPosition(QVector3D(mBomberEnemy->GetPosition().x(), mTerrain->GetHeight(mBomberEnemy->GetPosition()), mBomberEnemy->GetPosition().z()));
         b->UpdateTransform();
         qDebug() << "Amount of bombs: " << mBombs.size();
     }
-    return;
+
     //Send bombene need til terrenget
     for(int i = 0; i < mBombs.size(); i++){
         //Oppdater senter til bombene kolliderene
@@ -366,25 +363,31 @@ void RenderWindow::ResetGame()
     //Reset poeng
     mPlayerTrophies = 0;
     mEnemyTrophies = 0;
-
+    qDebug() << "ResetGame: ";
     //Slett bomber og trofeer
-    for(auto it = mMap.begin(); it != mMap.end(); it++){
-        //Om dette er en bombe fjern den fra mappet
-        if((*it).second->GetName() == "Bomb"){
-            mMap.erase(it);
-        }
-        if((*it).second->GetName() == "Trophy"){
-            mMap.erase(it);
-        }
+    for(int i = 0; i < mBombs.size(); i++){
+        mMap.erase("Bomb " + std::to_string(i));
     }
+    for(int i = 0; i < 20; i++){
+        mMap.erase("Trophy " + std::to_string(i));
+    }
+    mBombs.clear();
     SpawnTrophies();
+
     //Reset spiller
+
+    qDebug() << "ResetGame: spawned trophies";
     mMap["Player"]->SetPosition(QVector3D(0,0,0));
 
+    qDebug() << "ResetGame: set player pos";
     //Restart bomberman
     if(mBomberEnemy){
-        mBomberEnemy->mMovementProgress = 0;
+
+        qDebug() << "ResetGame: checked bomber";
+        mBomberEnemy->mMovementProgress = 0.5;
         mBombTimer = 0;
+
+        qDebug() << "ResetGame: finished resetting bomber";
     }
 
 }
@@ -412,7 +415,9 @@ void RenderWindow::SpawnTrophies(){
         t->SetPosition(QVector3D( -45 + rand() % 90, 0, -20 + rand() % 40));
         //Setter på terrenget
         t->SetPosition(QVector3D(t->GetPosition().x(), mTerrain->GetHeight(t->GetPosition()), t->GetPosition().z()));
+        t->init();
     }
+    qDebug() << "Finished spawning trophhies";
 }
 
 // Called each frame - doing the rendering!!!
