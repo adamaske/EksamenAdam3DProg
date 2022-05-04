@@ -170,8 +170,9 @@ void RenderWindow::init()
     mMap.insert(std::pair<std::string, VisualObject*>{"BomberEnemy", mBomberEnemy});
 
     //Oppgave 8
-    SpawnTrophies();
     //Lage trofeer
+    SpawnTrophies();
+
 
 
     //Oppgave 9
@@ -369,9 +370,17 @@ void RenderWindow::ResetGame()
     //Reset spiller
     mMap["Player"]->SetPosition(QVector3D(0,0,0));
     //Slett bomber
-
+    for(auto it = mMap.begin(); it != mMap.end(); it++){
+        //Om dette er en bombe fjern den fra mappet
+        if((*it).second->GetName() == "Bomb"){
+            mMap.erase(it);
+        }
+    }
     //Restart bomberman
-
+    if(mBomberEnemy){
+        mBomberEnemy->mMovementProgress = 0;
+        mBombTimer = 0;
+    }
 
 }
 
