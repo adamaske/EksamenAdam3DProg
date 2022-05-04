@@ -26,6 +26,22 @@
 #include "bomb.h"
 #include "collisionshape.h"
 
+//Oppsumering
+//Oppgave 2 er ferdig
+//Oppgave 3 er gjort, solen mangler gul farge bare
+//Oppgave 4 er ferdig
+//Oppgave 5 er ferdig
+//Oppgave 6 er ferdig
+//Oppgave 7: bombene blir plassert helt feil eller syntes ikke, men funksjonaliteten er ferdig
+//Oppgave 8 er ferdig
+//Oppgave 9 Fienden beveger seg ikke, men funksjonalitet for å plukke opp trofeer er ferdig. Spilleren plukker opp trofeer som den skal
+//Oppgave 10 Gjerdene har ikke kollisjon og ikke hvit farge
+//Oppgave 11 Ikke gjort
+//Oppgave 12 er ferdig
+//Oppgave 13 er ferdig
+//Oppgave 14 Mangler GUI element, men å trykke R resetter spillet
+//Oppgave 15 hehe vansklig å justere uten npc som beveger seg
+//Oppgave 16 håper det er bra nok
 
 RenderWindow::RenderWindow(const QSurfaceFormat &format, MainWindow *mainWindow)
     : mContext(nullptr), mInitialized(false), mMainWindow(mainWindow), mQuadTree(Point2D(50,50), Point2D(-50,50), Point2D(50,-50), Point2D(-50,-50))
@@ -132,11 +148,13 @@ void RenderWindow::init()
     mTerrain = new Terrain(*mShaders["LightShader"], mTextures["Grass"], ObjectState::STATIC);
     mMap.insert(std::pair<std::string, VisualObject*>{"Terrain", mTerrain});
     mTerrain->SetName("Terrain");
+
     //Oppgave 3
     mSun = new VisualSun("../EksamenAdam3DProg/Sun.obj", *mShaders["LightShader"], ObjectState::STATIC);
     mMap.insert(std::pair<std::string, VisualObject*>{"Sun", mSun});
     mSun->SetName("Sun");
     mSun->mObjectColor = QVector3D(1,1,0);
+
     //Oppgave 4
     //Lager player fra object.obj, gir phongshader og hund tekstur
     mMap.insert(std::pair<std::string, VisualObject*>{"Player",
@@ -144,8 +162,9 @@ void RenderWindow::init()
     mMap["Player"]->RotateRight(-90);
     mMap["Player"]->SetPosition(QVector3D(0, 0, 0));
     mMap["Player"]->SetName("Player");
-    //Gives collider to palyer
+    //Gir spilleren kollisjon
     mMap["Player"]->SetCollisionShape(new CollisionShape(mMap["Player"], CollisionShapeMode::SPHERE));
+
     //Oppgave 5
     //lager kameraer
     mPlayCamera = new Camera();
@@ -156,6 +175,7 @@ void RenderWindow::init()
     mXYZ = new XYZ(*mShaders["PlainShader"], ObjectState::STATIC);
     mXYZ->init();
     mXYZ->SetPosition(QVector3D(0, 0, 7));
+
     //Oppgave 7
     //Lager kontroll punkter
     std::vector<QVector3D> bezierControls;
@@ -176,24 +196,20 @@ void RenderWindow::init()
     //Oppgave 9
     Enemy* e = new Enemy("../EksamenAdam3DProg/enemy.obj", *mShaders["LightShader"], new Texture(), ObjectState::DYNAMIC);
     mMap.insert(std::pair<std::string, VisualObject*>{"CollectorEnemy", e});
-    mQuadTree.insert(e->getPosition2D(), "CollectorEnemy", e);
 
     //Oppgave 10
     mMap.insert(std::pair<std::string, VisualObject*>{"Fence 1", new ObjMesh("../EksamenAdam3DProg/fence.obj", *mShaders["LightShader"], ObjectState::STATIC)});
     mMap.insert(std::pair<std::string, VisualObject*>{"Fence 2", new ObjMesh("../EksamenAdam3DProg/fence.obj", *mShaders["LightShader"], ObjectState::STATIC)});
 
-    mMap["Fence 1"]->init();
-    mMap["Fence 2"]->init();
-    //Subdivide quadtree
-    mQuadTree.subDivide(2);
     //init every object
     for (auto it = mMap.begin(); it != mMap.end(); it++) {
         //Adds all visual objects to the quadtree
         (*it).second->init();
         (*it).second->UpdateTransform();
     }
+    //Initer editor kamera her slik at det ikke blir resatt hver frame som play kamera
     mEditorCamera->init();
-
+    //Setter start posisjon til editorkamera
     mEditorCamera->SetPosition(QVector3D(0, 15,-10));
 
     mMap["Fence 1"]->mObjectColor = QVector3D(1,1,1);
@@ -220,17 +236,21 @@ void RenderWindow::DoBombLogic()
     }else{
         mBomberEnemy->mMovementProgress -= 0.005f;
     }
+    //Alltid vær mellom 0 og 1, ellers vil bezier funksjonen gi rart resultat
     mBomberEnemy->mMovementProgress = std::clamp(mBomberEnemy->mMovementProgress, 0.f, 1.f);
     //Set posisjonen til fienden langs bezier kurven på t
     mBomberEnemy->SetPosition(mBezierCurve->EvaluateBezier(mBomberEnemy->mMovementProgress));
     //Hvis det er mer eller likt 2 sekunder siden forrige bombe, slepp nå
     mBombTimer += 0.05;
     if(mBombTimer >= 6){
+        //Reset bombetimeren
         mBombTimer = 0;
         //lager en ny bombe
         Bomb* b = new Bomb("../EksamenAdam3DProg/bomb.obj", *mShaders["LightShader"], mTextures["hund"], ObjectState::STATIC, nullptr);
         mBombs.push_back(b);
+        //Initer
         b->init();
+        //Gir kollisjon
         b->SetCollisionShape(new CollisionShape(b, CollisionShapeMode::SPHERE));
         //Setter inn i map
         mMap.insert(std::pair<std::string, VisualObject*>{"Bomb " + std::to_string(mBombs.size()-1), b});
@@ -242,16 +262,17 @@ void RenderWindow::DoBombLogic()
 
     //Send bombene need til terrenget
     for(int i = 0; i < mBombs.size(); i++){
-        //Oppdater senter til bombene kolliderene
+        //Finn hvor jeg vil bomben skal være og hvor den faktisk er
         float desired = mTerrain->GetHeight(mBombs[i]->GetPosition());
         float actual = mBombs[i]->GetPosition().y();
         //0.1 toleranse
+        //Om bomben er over terrenget beveg den nedover,
         if(actual > desired + 0.1){
             float y = mBombs[i]->GetPosition().y();
             y -= 0.01;
             //Setter ny y verdi
             mBombs[i]->SetPosition(QVector3D(mBombs[i]->GetPosition().x(), y, mBombs[i]->GetPosition().z()));
-        }else if(actual < desired - 0.1){
+        }else if(actual < desired - 0.1){ //Om den er under terreget for en eller annen grunn, beveg den oppover
             float y = mBombs[i]->GetPosition().y();
             y += 0.01;
             //Setter ny y verdi
@@ -263,8 +284,7 @@ void RenderWindow::DoBombLogic()
 //Oppgave 8 og 9
 void RenderWindow::DoCollisionCheck()
 {
-    //Quad treet mitt er wonky så fungerer bedre å gjøre det på denne måten foreløpig
-    //Går gjennom hvert objekt i map
+    //Går gjennom hvert objekt i mMap
     for(auto it = mMap.begin(); it != mMap.end(); it++){
         //Ikke collide spiller mot seg selv
         if((*it).second != mMap["Player"]){
@@ -300,6 +320,7 @@ void RenderWindow::DoCollisionCheck()
             }
         }
     }
+    //Samme som spilleren men med CollectorEnemy
     for(auto it = mMap.begin(); it != mMap.end(); it++){
         if((*it).second != mMap["CollectorEnemy"]){
             //Kollider det med samleren
@@ -339,21 +360,20 @@ void RenderWindow::DoCollisionCheck()
         //Oppgave 12, her vinner fienden og spiller restartes
             ResetGame();
     }
-
     return;
 }
-
+//Resetter frys timeren
 void RenderWindow::FreezePlayer()
 {
     mPlayerFreezeTimer = 0;
-
+    //Ber spilleren om å fryse
     mMap["Player"]->Freeze();
 }
 
 void RenderWindow::FreezeCollector()
 {
     mEnemyFreezeTimer = 0;
-
+    //Ber fienden om å fryse seg
     mMap["CollectorEnemy"]->Freeze();
 }
 
@@ -363,7 +383,7 @@ void RenderWindow::ResetGame()
     //Reset poeng
     mPlayerTrophies = 0;
     mEnemyTrophies = 0;
-    qDebug() << "ResetGame: ";
+
     //Slett bomber og trofeer
     for(int i = 0; i < mBombs.size(); i++){
         mMap.erase("Bomb " + std::to_string(i));
@@ -375,19 +395,13 @@ void RenderWindow::ResetGame()
     SpawnTrophies();
 
     //Reset spiller
-
-    qDebug() << "ResetGame: spawned trophies";
     mMap["Player"]->SetPosition(QVector3D(0,0,0));
+    mMap["Player"]->Unfreeze();
 
-    qDebug() << "ResetGame: set player pos";
     //Restart bomberman
     if(mBomberEnemy){
-
-        qDebug() << "ResetGame: checked bomber";
         mBomberEnemy->mMovementProgress = 0.5;
         mBombTimer = 0;
-
-        qDebug() << "ResetGame: finished resetting bomber";
     }
 
 }
@@ -785,15 +799,8 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
         break;
         }
     }
-    if (event->key() == Qt::Key_Tab)
-    {
-        if(mGameState == GameState::Editor){
 
-            mGameState = GameState::Play;
-        }else{
-            mGameState = GameState::Editor;
-        }
-    }
+    //Oppgave 14
     if (event->key() == Qt::Key_R)
     {
         if(mGameState == GameState::Editor){
@@ -803,15 +810,6 @@ void RenderWindow::keyPressEvent(QKeyEvent *event)
             ResetGame();
         }
     }
-    //You get the keyboard input like this
-//    if(event->key() == Qt::Key_A)
-//    {
-//        mMainWindow->statusBar()->showMessage(" AAAA");
-//    }
-//    if(event->key() == Qt::Key_S)
-//    {
-//        mMainWindow->statusBar()->showMessage(" SSSS");
-//    }
 }
 
 void RenderWindow::SwapGameMode(){
